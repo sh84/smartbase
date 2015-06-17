@@ -43,6 +43,11 @@ TVComponents.Player.prototype.stateChange = function(new_state) {
 	this.onstatechange && this._videoready && this.onstatechange(this.state);
 };
 
+TVComponents.Player.prototype.getNewUrl = function() {
+	// redefine for live playing in philips
+	return this.data.url;
+};
+
 TVComponents.Player.prototype.onready = function() {
 	this.video = new TV.PlayerWrapper(TV.platform.isSamsung ? this.attributes.samsung_player_object : null);
 	this.video.onready = this.onvideoready.bind(this);
@@ -60,14 +65,20 @@ TVComponents.Player.prototype.onready = function() {
 		this.play();
 	}.bind(this), 0);
 
+
+	this.buttons.play.onclick = function() {
+		this.buttons._act_btn = null; // разрешаем повторное нажатие
+		if (this.state == 'play') {
+			this.pause();
+		} else {
+			this.play();
+		}
+	}.bind(this);
+
 	if (!this.isLive()) {
-		this.buttons.play.onclick = function() {
-			this.buttons._act_btn = null; // разрешаем повторное нажатие
-			if (this.state == 'play') {
-				this.pause();
-			} else {
-				this.play();
-			}
+		this.buttons.stop.onclick = function () {
+			this.buttons._act_btn = null;
+			this.stop();
 		}.bind(this);
 
 		this.buttons.timeline.onclick = function() {
@@ -101,16 +112,19 @@ TVComponents.Player.prototype.onready = function() {
 			if (this.state != 'play') this.play();
 			e.stopPropagation();
 		}.bind(this);
+	} else {
+		this.buttons.live_strip.onclick = function() {
+			if (TV.platform.isPhilips) {
+				this.stop();
+				this.video.url = this.getNewUrl(this.video.url);
+				this.play();
+			} else {
+				this.stop();
+				this.play();
+			}
+		}.bind(this);
 	}
 
-	this.buttons.stop.onclick = function() {
-		this.buttons._act_btn = null;
-		if (this.state == 'stop' && this.isLive()) {
-			this.play();
-		} else {
-			 this.stop();
-		}
-	}.bind(this);
 	this.buttons.close.onclick = function() {
 		this.buttons._act_btn = null;
 		this.stop();
@@ -206,7 +220,15 @@ TVComponents.Player.prototype.onvideoprogress = function(time) {
             }.bind(this), 3000);
             this.play();
 
-        } else {
+        }  if (TV.platform.isLG || TV.platform.isSamsung) {
+			// pause-sleep-seek позволяет избежать зависания при автоперемотке с начала ролика
+			this.pause();
+			setTimeout(function() {
+				TV.log('Timeout on auto seek. Now the state is', this.state);
+				this.seek(this.data.seek);
+				this.play();
+			}.bind(this), 1000);
+		} else {
             this.seek(this.data.seek);
         }
 
@@ -218,7 +240,8 @@ TVComponents.Player.prototype.onvideoprogress = function(time) {
 	this.curr_time = time / 1000;
 	if (!this.isLive()) {
 		this.updateTimeline();
-	if (this.curr_time > 0 && this.duration > 0 && this.curr_time >= this.duration) {
+		var end_time = (TV.platform.isLG || TV.platform.isWebOs) ? this.duration-0.99 : this.duration;
+		if (this.curr_time > 0 && this.duration > 0 && this.curr_time >= end_time) {
 			TV.log('force stop', this.state);
 			this.stop();
 			this.onend && this.onend();
@@ -228,25 +251,28 @@ TVComponents.Player.prototype.onvideoprogress = function(time) {
 };
 
 // ошибка при проигрывании
-TVComponents.Player.prototype.onvideoerror = function(error) {
+	TVComponents.Player.prototype.onvideoerror = function(error) {
 	TV.log('onvideoerror', error);
 	TV.show('[data-id="player_error"]', this.el);
 	TV.setHTML('[data-id="player_error"]', error || 'Ошибка', this.el);
 	TV.hide('[data-id="player_loader"]', this.el);
 	if (this.state != 'stop') this.stop();
+	this._inactive_timer = null;
+	TV.log('hide panel');
+	TV.addClass('[data-id="player_panel"]', TVComponents.Player.hidden_panel_class, this.el);
+	app.popups.error.afterhide = function () {
+		this.buttons.close.onmouseclick();
+		app.popups.error.afterhide = function(){};
+	}.bind(this);
+	app.popups.error.show(error || 'Ошибка');
 };
 
 TVComponents.Player.prototype.play = function() {
 	TV.log('play', this.state, this.data.url);
 	if (this._where_to_seek !== null) this._where_to_seek = null;
 	if (this.buffering) return;
-	if (this.isLive()) {
-		TV.removeClass(this.buttons.stop.el, TVComponents.Player.btn_play_class);
-		TV.addClass(this.buttons.stop.el, TVComponents.Player.btn_stop_class);
-	} else {
-		TV.removeClass(this.buttons.play.el, TVComponents.Player.btn_play_class);
-		TV.addClass(this.buttons.play.el, TVComponents.Player.btn_pause_class);
-	}
+	TV.removeClass(this.buttons.play.el, TVComponents.Player.btn_play_class);
+	TV.addClass(this.buttons.play.el, TVComponents.Player.btn_pause_class);
 	if (this.state == 'stop') {
 		this.stateChange('play');
 		// обновляем таймлайн
@@ -280,13 +306,8 @@ TVComponents.Player.prototype.stop = function() {
 	TV.log('stop', this.state);
 	TV.hide('[data-id="player_loader"]', this.el);
 	if (this.state == 'stop') return;
-	if (this.isLive()) {
-		TV.removeClass(this.buttons.stop.el, TVComponents.Player.btn_stop_class);
-		TV.addClass(this.buttons.stop.el, TVComponents.Player.btn_play_class);
-	} else {
-		TV.addClass(this.buttons.play.el, TVComponents.Player.btn_play_class);
-		TV.removeClass(this.buttons.play.el, TVComponents.Player.btn_pause_class);
-	}
+	TV.addClass(this.buttons.play.el, TVComponents.Player.btn_play_class);
+	TV.removeClass(this.buttons.play.el, TVComponents.Player.btn_pause_class);
 	this._where_to_seek = null;
 	this.hideSeek(true);
 	this.stopInactive();

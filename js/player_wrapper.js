@@ -21,7 +21,7 @@ TV.PlayerWrapper = function(el) {
     } else if (TV.platform.isPhilips && !this.el) {
         if (!TV.PlayerWrapper.video_el) {
             TV.PlayerWrapper.video_el = document.createElement('object');
-            TV.PlayerWrapper.video_el.setAttribute('type', 'video/mpeg4');
+            TV.PlayerWrapper.video_el.setAttribute('type', 'application/vnd.apple.mpegurl');
             document.body.insertBefore(TV.PlayerWrapper.video_el, document.body.firstChild);
         }
         this.el = TV.PlayerWrapper.video_el;

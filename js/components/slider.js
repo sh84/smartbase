@@ -6,6 +6,7 @@ TVComponents.Slider = function(el, adjacent_buttons, parent, class_name) {
 	this.is_vertical = this.direction == 'vertical';
 	this.is_horizontal = !this.is_vertical;
 	this.nav_buttons = this.attributes['nav_buttons'] ? true : false;
+    this.use_none = this.attributes['none'] ? true : false;
 
 	if (this.is_horizontal) {
 		this.first_side = 'left';
@@ -35,6 +36,11 @@ TVComponents.Slider.prototype.onready = function() {
 	this.start_position = 0;
 	this.container_el = TV.el('[data-type="slider_container"]', this.el);
 	TV.setHTML(this.container_el, '');
+
+    if (this.data.length == 0 && this.use_none) {
+        this._addNone();
+    }
+
 	if (this.data.length == 0) return;
 
 	// ренедрим элементы-кнопки
@@ -63,6 +69,19 @@ TVComponents.Slider.prototype.onready = function() {
 	this._initScrollbarButtons();
 	this.setScrollbar();
 };
+
+// добавить пустой html-элемент
+TVComponents.Slider.prototype._addNone = function() {
+    var item_templ_name = (TV.app.curr_popup) ? TV.app.curr_popup.name : TV.app.curr_page.name;
+    var ejs_path = 'none#' + item_templ_name + '.' + this.id;
+    if (this.attributes.item_template && TV.app.ejs[this.attributes.item_template]) ejs_path = this.attributes.item_template;
+
+    if (!TV.app.ejs[ejs_path]) throw 'Not defined template ' + ejs_path + ' for component ' + this.id;
+    var html = TV.app.ejs[ejs_path]();
+
+    var el = TV.createElement(html);
+    this.container_el.appendChild(el);
+}
 
 // добавить новый html-элемент
 TVComponents.Slider.prototype._addElement = function(item, is_first) {
@@ -222,7 +241,7 @@ TVComponents.Slider.prototype._movie = function(is_first) {
 			this.first_el_pos = parseInt(this.is_horizontal ? el.style.left: el.style.top);
 		}
 		// добавляем новый элемент
-		var item = this._getItem(is_first ? this.start_position - 1 : this.start_position + this.count);
+		var item = this._getItem(is_first ? this.start_position - 1 + this.start_for_dynamic : this.start_position + this.count  + this.start_for_dynamic);
 		this._addElement(item, is_first);
 	}
 

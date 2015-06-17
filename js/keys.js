@@ -30,7 +30,7 @@ if (TV.platform.isSamsung) {
 	TV.keys.num_0 = TV.key_api.KEY_0;
 	TV.keys.page_up = -1;
 	TV.keys.page_down = -1;
-} else if (TV.platform.isLG || TV.platform.isWebOs || TV.platform.isPhilips) {
+} else if (TV.platform.isLG || TV.platform.isWebOs) {
 	TV.keys.exit = -1;
 	TV.keys.left = 37;
 	TV.keys.right = 39;
@@ -39,14 +39,14 @@ if (TV.platform.isSamsung) {
 	TV.keys.enter = 13;
 	TV.keys.green = 404;
 	TV.keys.red = 403;
-	TV.keys.yellow = TV.platform.isPhilips ? 502 : 405;
+	TV.keys.yellow = 405;
 	TV.keys.blue = 406;
 	TV.keys.play = 415;
 	TV.keys.pause = 19;
 	TV.keys.stop = 413;
 	TV.keys.rw = 412;
-	TV.keys.ff = TV.platform.isPhilips ? 473 : 417;
-	TV.keys.return = TV.platform.isPhilips ? 8 : 461;
+	TV.keys.ff = 417;
+	TV.keys.return = 461;
 	TV.keys.tools = 457;
 	TV.keys.num_1 = 49;
 	TV.keys.num_2 = 50;
@@ -60,6 +60,36 @@ if (TV.platform.isSamsung) {
 	TV.keys.num_0 = 48;
 	TV.keys.page_up = 33;
 	TV.keys.page_down = 34;
+} else if (TV.platform.isPhilips) {
+	TV.keys.exit = -1;
+	TV.keys.left = VK_LEFT;
+	TV.keys.right = VK_RIGHT;
+	TV.keys.up = VK_UP;
+	TV.keys.down = VK_DOWN;
+	TV.keys.enter = VK_ENTER;
+	TV.keys.green = VK_GREEN;
+	TV.keys.red = VK_RED;
+	TV.keys.yellow = VK_YELLOW;
+	TV.keys.blue = VK_BLUE;
+	TV.keys.play = VK_PLAY;
+	TV.keys.pause = VK_PAUSE;
+	TV.keys.stop = VK_STOP;
+	TV.keys.rw = VK_REWIND;
+	TV.keys.ff = VK_FAST_FWD;
+	TV.keys.return = VK_BACK;
+	TV.keys.tools = 457;
+	TV.keys.num_1 = VK_1;
+	TV.keys.num_2 = VK_2;
+	TV.keys.num_3 = VK_3;
+	TV.keys.num_4 = VK_4;
+	TV.keys.num_5 = VK_5;
+	TV.keys.num_6 = VK_6;
+	TV.keys.num_7 = VK_7;
+	TV.keys.num_8 = VK_8;
+	TV.keys.num_9 = VK_9;
+	TV.keys.num_0 = VK_0;
+	TV.keys.page_up = VK_PAGE_UP;
+	TV.keys.page_down = VK_PAGE_DOWN;
 } else if (TV.platform.isBrowser) {
 	TV.keys.exit = 27;   //esc
 	TV.keys.left = 37;

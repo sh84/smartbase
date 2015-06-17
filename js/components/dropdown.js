@@ -19,6 +19,8 @@ TVComponents.Dropdown.prototype.onready = function() {
     slider.class_name = 'Slider';
     slider.data = this.data;
     slider.init();
+	// если элементов в слайдере меньше, чем указано в data-count, подгоняем высоту
+	if (slider.data.length <= slider.count) slider.el.style.height = TV.getSize(TV.el('.slider-item', slider.el)).height * slider.data.length + 'px';
     slider.disable();
 
 	this.buttons._start_btn = button;

@@ -46,4 +46,10 @@ TVPopup.prototype.hide = function() {
 	this.app.renderFooter();
 	TV.hide(this.app.popup_overlay_el);
 	TV.hide(this.el);
+	this.afterhide();
+};
+
+
+TVPopup.prototype.afterhide = function() {
+	// вызывается послe hide
 };

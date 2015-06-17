@@ -13,7 +13,7 @@ function TV(options) {
 	this.key_back_ignore = false;       // ничего не делать при нажатии кнопки назад
 	this.clear_history_on_index_page = false;	// сбрасывать историю на главной
 	this.index_page_name = null;		// имя главной страницы
-	this.device_id = 'default device id';
+	this.device_id = '';
 	this.id_prefix = 'TV_';
 	if (options) {
 		for (var i in options) {
@@ -40,6 +40,21 @@ TV.prototype.prerender = function() {
 	// вызывается перед render
 };
 
+TV.prototype.generateSerialNumber = function(platform) {
+    var t = new Date();
+    var ms = t.getTime();
+    var serialNumber = TV.MD5(ms + platform + Math.floor(Math.random()*1000000));
+    TV.setCookie('serialNumber', serialNumber, 'Tue, 01 Jan 2030 00:00:00 GMT', '/');
+    return serialNumber;
+};
+
+TV.prototype.generateToken = function() {
+    var t = new Date();
+    var ms = t.getTime();
+    var token = TV.MD5(ms + 'token' + Math.floor(Math.random()*1000000));
+    return token;
+};
+
 TV.prototype.onLoad = function() {
 	// ищем device_id
 	if (TV.platform.isSamsung) {
@@ -53,44 +68,86 @@ TV.prototype.onLoad = function() {
 		}
 		//<object type="application/x-netcast-info" id="device"></object>
 		this.device_id = el.serialNumber;
+	} /*  
+
+	// WebOs API is unavaliable when "trustLevel":"netcast" in appinfo.json is set
+
+	else if (TV.platform.isWebOs) {
+		
+		webOS.service.request("luna://com.webos.service.tv.systemproperty", {
+			method: "getSystemInfo",
+			parameters: {
+				"keys": ["modelName", "firmwareVersion", "UHD", "sdkVersion"]
+			},
+			onComplete: function (inResponse) {
+				var isSucceeded = inResponse.returnValue;
+				if (isSucceeded) {
+					this.device_id = inResponse.modelName+inResponse.firmwareVersion;
+					data.device_id = this.device_id.replace(/(\s|\u00A0)+/g,'');
+					TV.log('Device id webOs: '+data.device_id);
+				} else {
+					TV.log("Failed to get TV device information");
+					this.device_id = TV.getCookie('serialNumber') || this.generateSerialNumber('WebOs');
+				}
+				ready.call(TV.app);
+			}.bind(this)
+		});
+    // у Philips'а нет серийного номера и локального хранилища тоже нет
+	}*/ 
+	else if (TV.platform.isPhilips) {
+        try {
+            this.device_id = TV.getCookie('serialNumber') || this.generateSerialNumber('Philips');
+        }catch(e) {
+            this.device_id = 'default_device_id_philips';
+        }
+    } else {
+		this.device_id = TV.getCookie('serialNumber') || this.generateSerialNumber('Default');
 	}
 
-	// компилируем все найденные шаблоны
-	var templates = TV.find('script[type="text/template"]');
-	for (var i=0; i < templates.length; i++) {
-		var el = templates[i];
-		if (!el._attributes['target']) throw 'Not defined data-target for template';
-		var ejs_fn = ejs.compile(el.innerHTML, {open: '{%', close: '%}'});
-		ejs_fn.attributes = el._attributes;
-		if (el._attributes['name']) {
-			if (!this.ejs[el._attributes['target']]) this.ejs[el._attributes['target']] = {};
-			this.ejs[el._attributes['target']][el._attributes['name']] = ejs_fn;
-		} else {
-			this.ejs[el._attributes['target']] = ejs_fn;
+	data.device_id = this.device_id.replace(/(\s|\u00A0)+/g,'');
+	
+	function ready () {
+		// компилируем все найденные шаблоны
+		var templates = TV.find('script[type="text/template"]');
+		for (var i=0; i < templates.length; i++) {
+			var el = templates[i];
+			if (!el._attributes['target']) throw 'Not defined data-target for template';
+			var ejs_fn = ejs.compile(el.innerHTML, {open: '{%', close: '%}'});
+			ejs_fn.attributes = el._attributes;
+			if (el._attributes['name']) {
+				if (!this.ejs[el._attributes['target']]) this.ejs[el._attributes['target']] = {};
+				this.ejs[el._attributes['target']][el._attributes['name']] = ejs_fn;
+			} else {
+				this.ejs[el._attributes['target']] = ejs_fn;
+			}
 		}
-	}
 
-	// все шаблоны popup инициализируем как попапы
-	for (var name in  this.ejs.popup) {
-		var cl = this.ejs.popup[name].attributes['class'] || 'TVPopup';
-		if (typeof(window[cl]) != 'function') throw 'Not defined '+cl+' class for popup '+name;
-		new window[cl](this, name);
-	}
+		// все шаблоны popup инициализируем как попапы
+		for (var name in  this.ejs.popup) {
+			var cl = this.ejs.popup[name].attributes['class'] || 'TVPopup';
+			if (typeof(window[cl]) != 'function') throw 'Not defined '+cl+' class for popup '+name;
+			new window[cl](this, name);
+		}
 
-	// все шаблоны page инициализируем как страницы
-	if (!this.ejs.page) throw 'Not defined page templates';
-	for (var name in  this.ejs.page) {
-		var cl = this.ejs.page[name].attributes['class'] || 'TVPage';
-		if (typeof(window[cl]) != 'function') throw 'Not defined '+cl+' class for page '+name;
-		new window[cl](this, name);
-	}
+		// все шаблоны page инициализируем как страницы
+		if (!this.ejs.page) throw 'Not defined page templates';
+		for (var name in  this.ejs.page) {
+			var cl = this.ejs.page[name].attributes['class'] || 'TVPage';
+			if (typeof(window[cl]) != 'function') throw 'Not defined '+cl+' class for page '+name;
+			new window[cl](this, name);
+		}
 
-	this.show();
-	document.addEventListener('keydown', this.onKey.bind(this), false);
-	if (TV.platform.isWebOs) {
-		window.addEventListener("popstate", this.onPopState);
-	}
-	if (TV.platform.isSamsung) TV.widget_api.sendReadyEvent();
+		this.show();
+		document.addEventListener('keydown', this.onKey.bind(this), false);
+		// unavaliable because of "trustLevel":"netcast" in appinfo.json
+		// if (TV.platform.isWebOs) {
+		// 	window.addEventListener("popstate", this.onPopState);
+		// }
+		if (TV.platform.isSamsung) TV.widget_api.sendReadyEvent();
+	};
+		
+	TV.log('Device id: '+data.device_id);
+	ready.call(TV.app);
 };
 
 TV.prototype.onPopState = function(e) {
@@ -199,8 +256,10 @@ TV.prototype.onKeyBack = function() {
 TV.prototype.exit = function() {
 	if (TV.platform.isSamsung) {
 		TV.widget_api.sendReturnEvent();
-	} else if (TV.platform.isLG) {
+	} else if (TV.platform.isLG || TV.platform.isWebOs) {
 		window.NetCastBack();
+	} else if (TV.platform.isPhilips) {
+		history.go(-999);
 	}
 };
 
