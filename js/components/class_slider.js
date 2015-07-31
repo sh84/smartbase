@@ -15,6 +15,7 @@ TVComponents.ClassSlider.middle_class = 'slider-item slider-item_middle';
 TVComponents.ClassSlider.next_class = 'slider-item slider-item_next-';
 
 TVComponents.ClassSlider.prototype.onready = function() {
+	if (!this.data || !this.data.length) return;
 	TVComponents.Slider.prototype.onready.call(this);
 	this._setClasses();
 	this._selectMiddle();
@@ -38,15 +39,14 @@ TVComponents.ClassSlider.prototype._setClasses = function() {
 	els[els_length-1].style.visibility = 'hidden';
 
 	var middle_index = (els_length-1)/2;
-	var middle_pos = this.is_horizontal ? TV.getSize(this.container_el).width/2 - TV.getSize(els[middle_index]).width/2 : 
-		TV.getSize(this.container_el).height/2 - TV.getSize(els[middle_index]).height/2;
+	var middle_pos = this.is_horizontal ? TV.getSize(this.container_el).width/2 - TV.getSize(els[middle_index]).width/2 : TV.getSize(this.container_el).height/2 - TV.getSize(els[middle_index]).height/2;
 	var last_pos = middle_pos;
 
 	// обходим элементы от среднего до начала, устанавливаем класс, для класса считаем позицию, 
 	// каждый раз равную позиции последнего - distance - размер самого элемента 
 	var prev_pos = middle_pos;
 	for(var k = middle_index-1; k >= 0; k--) {
-		item_class = TVComponents.ClassSlider.prev_class+(1 - k - this.start_for_dynamic);
+		item_class = TVComponents.ClassSlider.prev_class+(1 - k - this.start_for_dynamic)+'-'+this.id ;
 		if (this.is_horizontal) {
 			prev_pos -= TV.getSize(els[k]).width + this.distance;
 			styles += '.'+item_class.replace(/ /g, '.')+' {left: '+prev_pos+'px; will-change: left, transform;} ';
@@ -60,8 +60,8 @@ TVComponents.ClassSlider.prototype._setClasses = function() {
 	// обходим элементы, начиная со среднего до конца, устанавливаем класс, для класса считаем позицию, 
 	// каждый раз равную позиции последнего + его размеру + distance
 	for(var j = middle_index; j < els_length; j++) {
-		item_class = (last_pos == middle_pos) ? TVComponents.ClassSlider.middle_class : TVComponents.ClassSlider.next_class+(-1 + j + this.start_for_dynamic);
-
+		item_class = (last_pos == middle_pos) ? TVComponents.ClassSlider.middle_class+'-'+this.id 
+			: TVComponents.ClassSlider.next_class+(-1 + j + this.start_for_dynamic)+'-'+this.id;
 		if (this.is_horizontal) {
 			styles += '.'+item_class.replace(/ /g, '.')+' {left: '+last_pos+'px; will-change: left, transform;} ';
 			last_pos += TV.getSize(els[j]).width + this.distance;
@@ -79,7 +79,7 @@ TVComponents.ClassSlider.prototype._setClasses = function() {
 	els[els_length-1].style.visibility = 'visible';
 };
 
-TVComponents.ClassSlider.prototype._selectMiddle = function(styles) {
+TVComponents.ClassSlider.prototype._selectMiddle = function() {
 	for (var n in this.buttons) {
 		if (this.buttons[n].el.className.indexOf(TVComponents.ClassSlider.middle_class) > -1) {
 			this.buttons[n].el.onmouseover();
@@ -89,11 +89,10 @@ TVComponents.ClassSlider.prototype._selectMiddle = function(styles) {
 };
 
 TVComponents.ClassSlider.prototype._setStylesheet = function(styles) {
-	var style_el = document.getElementById("classSliderStyles"+this.id);
+	var style_el = document.querySelector(' [title="classSliderStyles"]');
 	if (!style_el) {
 		style_el = document.createElement("style");
-		style_el.setAttribute("id", "classSliderStyles"+this.id);
-		style_el.setAttribute("title", "classSliderStyles"+this.id);
+		style_el.setAttribute("title", "classSliderStyles");
 		var head = document.getElementsByTagName("head")[0];
 		head.appendChild(style_el);
 	} 
@@ -101,24 +100,15 @@ TVComponents.ClassSlider.prototype._setStylesheet = function(styles) {
 	// вставить стили
 	if (typeof styles === "string") {
 		// styles содержит текстовое определение таблицы стилей
-			style_el.innerHTML = styles;
-	} else {
-		// styles - объект с правилами для вставки 
-		// находим объект стилей с нужным нам id
-		for(var i in document.styleSheets) {
-        	if(document.styleSheets[i].title && document.styleSheets[i].title == "classSliderStyles"+this.id) {
-            	styleSheet = document.styleSheets[i];
-            	break;
-        	}
-    	}
-		var j = 0;
-		for(var selector in styles) {
-			if (styleSheet.insertRule) {
-				var rule = selector + " {" + styles[selector] + "}"; 
-				styleSheet.insertRule(rule, j++);
-			} else {
-				styleSheet.addRule(selector, styles[selector], j++);
-			}
-		}
+		var curr_style = style_el.innerHTML;
+		if (curr_style.indexOf('/*'+this.id+'*/')+1) {
+			var start = curr_style.indexOf('/*'+this.id+'*/');
+			var fin = curr_style.lastIndexOf('/*end_'+this.id+'*/');
+			var substr = curr_style.slice(start, fin + this.id.length + 8);
+			var new_style =curr_style.replace(substr, '/*'+this.id+'*/'+styles+'/*end_'+this.id+'*/');
+			style_el.innerHTML = new_style;
+		} else {
+			style_el.innerHTML += '/*'+this.id+'*/'+styles+'/*end_'+this.id+'*/';
+		}			
 	}
 };
