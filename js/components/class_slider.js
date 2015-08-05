@@ -15,8 +15,8 @@ TVComponents.ClassSlider.middle_class = 'slider-item slider-item_middle';
 TVComponents.ClassSlider.next_class = 'slider-item slider-item_next-';
 
 TVComponents.ClassSlider.prototype.onready = function() {
-	if (!this.data || !this.data.length) return;
 	TVComponents.Slider.prototype.onready.call(this);
+	if (!this.data || !this.data.length) return;
 	this._setClasses();
 	this._selectMiddle();
 };
