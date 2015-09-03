@@ -189,10 +189,32 @@ TV.prototype.onPopState = function(e) {
 
 
 TV.prototype.show = function() {
+	// ищем 1-ю страницу из страниц меню
 	for (var name in this.pages) {
 		if (!this.curr_page && this.pages[name].isMenuPage()) {
 			this.curr_page = this.pages[name];
 			if (!this.index_page_name) this.index_page_name = name;
+			break;
+		}
+	}
+	
+	// если страниц меню нет - ищем страницу с data-start=true
+	if (!this.curr_page) {
+		for (var name in this.pages) {
+			if (!this.curr_page && this.pages[name].attributes.start) {
+				this.curr_page = this.pages[name];
+				if (!this.index_page_name) this.index_page_name = name;
+				break;
+			}
+		}
+	}
+	
+	// если и страниц с data-start=true нет - берем 1ю страницу
+	if (!this.curr_page) {
+		for (var name in this.pages) {
+			this.curr_page = this.pages[name];
+			if (!this.index_page_name) this.index_page_name = name;
+			break;
 		}
 	}
 

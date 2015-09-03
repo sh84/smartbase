@@ -23,11 +23,16 @@ TVComponent.prototype.init = function(start_btn_id) {
 	if (this.attributes.provider) {
 		var fn = eval(this.attributes.provider);
 		if (!fn) throw 'Non existent data-provider for component '+this.id;
-		if (typeof(fn) != 'function') throw 'data-provider is not function for component '+this.id;
-		// вычленяем часть до последней точки - считаем её за this при вызове
-		var fn_this = this.attributes.provider.replace(/(.*)\..*/, '$1');
-		fn_this = fn_this == this.attributes.provider ? window : eval(fn_this);
-		this._data_fn = fn.bind(fn_this, this);
+		if (typeof(fn) == 'function') {
+			// вычленяем часть до последней точки - считаем её за this при вызове
+			var fn_this = this.attributes.provider.replace(/(.*)\..*/, '$1');
+			fn_this = fn_this == this.attributes.provider ? window : eval(fn_this);
+			this._data_fn = fn.bind(fn_this, this);
+		} else {
+			this._data_fn = function() {
+				return eval(this.attributes.provider);
+			}.bind(this);
+		}
 	}
 
 	this.render(start_btn_id);

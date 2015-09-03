@@ -65,7 +65,8 @@ TVPage.prototype.render = function(start_btn_id) {
 	}
 
 	// переносим атрибут menu-down в меню хедера
-	document.querySelector('[data-id="menu"]').setAttribute('data-btn-down', this.menu_down);
+	var menu_el = document.querySelector('[data-id="menu"]');
+	if (menu_el) menu_el.setAttribute('data-btn-down', this.menu_down);
 
 	TVButton.initAll(this, start_btn_id);
 	if (this.onready) this.onready();
