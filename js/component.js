@@ -22,7 +22,7 @@ TVComponent.prototype.init = function(start_btn_id) {
 	// если для компонента есть data-provider - связываем c this._data_fn
 	if (this.attributes.provider) {
 		var fn = eval(this.attributes.provider);
-		if (!fn) throw 'Non existent data-provider for component '+this.id;
+		if (typeof(fn) == 'undefined') throw 'Non existent data-provider for component '+this.id;
 		if (typeof(fn) == 'function') {
 			// вычленяем часть до последней точки - считаем её за this при вызове
 			var fn_this = this.attributes.provider.replace(/(.*)\..*/, '$1');

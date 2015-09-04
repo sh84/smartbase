@@ -78,14 +78,25 @@ TVPage.prototype.show = function() {
 	if (this.beforeshow) {
 		if (this.beforeshow() === false) return;
 	}
-	var no_history = this._show_args == -1;
-	this._show_args = Array.prototype.slice.call(arguments, 0);
+	var new_show_args = Array.prototype.slice.call(arguments, 0);
+	var arr_eql = function(a, b) {
+		if (a.length != b.length) return false;
+		for (var i=0; i < a.length; i++) {
+			if (!~b.indexOf(a[i])) return false;
+		}
+		return true;
+	};
 	// если страница не из главного меню - добавляем предыдущую в историю переходов
-	if ((TV.app.history_in_menu || !this.isMenuPage()) && this.app.curr_page && this.app.curr_page != this && !no_history &&
-		(!this.app.history.length || this.app.history[this.app.history.length-1][0] != this.app.curr_page.name)) {
+	if ((TV.app.history_in_menu || !this.isMenuPage()) && this.app.curr_page && 
+		// новая страница не совпадает с скрываемой
+		(this.app.curr_page != this || !arr_eql(this._show_args, new_show_args)) && 
+		this._show_args != -1 && 
+		// скрываемая страница не совпадает с последней лежащей в истории
+		(!this.app.history.length || this.app.history[this.app.history.length-1][0] != this.app.curr_page.name || !arr_eql(this.app.history[this.app.history.length-1][1], this.app.curr_page._show_args))) {
 		this.app.history.push([this.app.curr_page.name, this.app.curr_page._show_args]);
 		// if (TV.platform.isWebOs && window.history.state === null) { window.history.pushState({"data":"some data"}); } // unavaliable because of "trustLevel":"netcast" in appinfo.json
 	}
+	this._show_args = new_show_args;
 	if (this.app.curr_page) {
 		TVButton.clearAll(this.app.curr_page);
 		this.app.curr_page.beforehide && this.app.curr_page.beforehide();
