@@ -18,6 +18,7 @@ function TVButton(el, adjacent_buttons, parent) {
 	this.right = this.attributes['btn-right'];
 	this.down = this.attributes['btn-down'];
 	this.left = this.attributes['btn-left'];
+	this.not_handle_mouse = this.attributes['not_handle_mouse']; // не реагировать на движения мышкой
 	if (this.attributes['btn']) {
 		var s = this.attributes['btn'].split(',');
 		if (s[0]) this.up = s[0].trim();
@@ -27,8 +28,14 @@ function TVButton(el, adjacent_buttons, parent) {
 	}
 
 	this.adjacent_buttons[this.id] = this;
-	this.el.onmouseover = this.onmouseover.bind(this);
-	this.el.onmouseout = this.onmouseout.bind(this);
+	this.el.onmouseover = function() {
+		if (this.not_handle_mouse) return;
+		this.onmouseover();
+	}.bind(this);
+	this.el.onmouseout = function() {
+		if (this.not_handle_mouse) return;
+		this.onmouseout();
+	}.bind(this);
 	this.el.onclick = this.onmouseclick.bind(this);
 }
 TVButton._counter = 1;
@@ -40,9 +47,7 @@ TVButton.pressed_class = 'pressed';    // класс нажатого элеме
 TVButton.initAll = function(page, start_btn_id) {
 	var start_btn_id_replaced = start_btn_id;
 	TVButton.clearAll(page);
-	Object.defineProperty(page.buttons, '_hover_btn', {configurable: true, writable: true, enumerable: false});  // выделенная сейчас кнопка
-	Object.defineProperty(page.buttons, '_act_btn', {configurable: true, writable: true, enumerable: false});    // последняя нажатая кнопка
-	Object.defineProperty(page.buttons, '_start_btn', {configurable: true, writable: true, enumerable: false});  // стартовая кнопка
+	TVButton._initButtons(page.buttons);
 
 	// ищем кнопки
 	var els = TV.find('[data-type="button"]', page instanceof TVPage ? null : page.el);
@@ -130,6 +135,12 @@ TVButton.initAll = function(page, start_btn_id) {
 	if (page.buttons._start_btn) page.buttons._start_btn.onmouseover();
 };
 
+TVButton._initButtons = function(buttons) {
+	Object.defineProperty(buttons, '_hover_btn', {configurable: true, writable: true, enumerable: false});  // выделенная сейчас кнопка
+	Object.defineProperty(buttons, '_act_btn', {configurable: true, writable: true, enumerable: false});    // последняя нажатая кнопка
+	Object.defineProperty(buttons, '_start_btn', {configurable: true, writable: true, enumerable: false});  // стартовая кнопка
+};
+
 TVButton.clearAll = function(page) {
 	for (var id in page.buttons) {
 		var btn = page.buttons[id];
@@ -141,15 +152,11 @@ TVButton.clearAll = function(page) {
 
 TVButton.onCursorKey = function(page, side) {
 	if (! side in ['up', 'right', 'down', 'left', 'enter']) throw 'Incorrect side ('+side+'), must be up, right, down, left or enter';
-	var hover_btn = page.buttons._hover_btn;
+	var btn = page.buttons._hover_btn || page.buttons._start_btn;
 	if (side == 'enter') {
-		if (hover_btn) hover_btn.onenter();
+		if (btn) btn.onenter();
 	} else {
-		if (hover_btn) {
-			hover_btn.oncursor(side);
-		} else {
-			this._start_btn && this._start_btn.onmouseover();
-		}
+		if (btn) btn.oncursor(side);
 	}
 };
 
@@ -164,7 +171,7 @@ TVButton.prototype.clear = function() {
 };
 
 TVButton.prototype.isMouseOnly = function() {
-	return (this.parent || !this.parent && Object.keys(this.adjacent_buttons)  > 1)
+	return (this.parent || !this.parent && Object.keys(this.adjacent_buttons).length  > 1)
 		&& !this.left && !this.right && !this.up && !this.down;
 };
 

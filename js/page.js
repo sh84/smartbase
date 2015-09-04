@@ -57,7 +57,7 @@ TVPage.prototype.render = function(start_btn_id) {
 		}
 	}
 	if (this.app.footer_el) {
-		if (this.no_header) {
+		if (this.no_footer) {
 			TV.hide(this.app.footer_el);
 		} else {
 			TV.show(this.app.footer_el);

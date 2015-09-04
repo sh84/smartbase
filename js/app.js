@@ -14,6 +14,8 @@ function TV(options) {
 	this.clear_history_on_index_page = false;	// сбрасывать историю на главной
 	this.index_page_name = null;		// имя главной страницы
 	this.device_id = '';
+	this.model_id = '';
+	this.support_uhd = false;
 	this.id_prefix = 'TV_';
 	if (options) {
 		for (var i in options) {
@@ -59,6 +61,29 @@ TV.prototype.onLoad = function() {
 	// ищем device_id
 	if (TV.platform.isSamsung) {
 		if (TV.el('pluginObjectNNavi') && TV.el('pluginNetwork')) this.device_id = TV.el('pluginObjectNNavi').GetDUID(TV.el('pluginNetwork').GetHWaddr());
+		if (typeof webapis === "undefined") {
+			this.model_id += 'undef';
+		} else {
+			if (webapis.tv.info.getModel) {
+				this.model_id += webapis.tv.info.getModel();
+			} else {
+				this.model_id += 'error';
+			};
+
+			//TV.log("defined supportUDPanel: ", webapis.tv.info.supportUDPanel);
+			//if (webapis.tv.info.supportUDPanel)
+			//	TV.log("supportUDPanel: ", webapis.tv.info.supportUDPanel());
+			this.support_uhd = (webapis.tv.info.supportUDPanel && webapis.tv.info.supportUDPanel()) ? true : false;
+/*
+			TV.log("getCountry: ", webapis.tv.info.getCountry());
+			TV.log("getLanguage: ", webapis.tv.info.getLanguage());
+			TV.log("getDeviceID: ", webapis.tv.info.getDeviceID());
+			TV.log("getFirmware: ", webapis.tv.info.getFirmware());
+			TV.log("getModel: ", webapis.tv.info.getModel());
+			TV.log("getProduct: ", webapis.tv.info.getProduct());
+			TV.log("getVersion: ", webapis.tv.info.getVersion());
+*/
+		}
 	} else if (TV.platform.isLG || TV.platform.isWebOs) {
 		var el = TV.el('[type="application/x-netcast-info"]');
 		if (!el) {
@@ -68,6 +93,8 @@ TV.prototype.onLoad = function() {
 		}
 		//<object type="application/x-netcast-info" id="device"></object>
 		this.device_id = el.serialNumber;
+		// свой css-класс для NetCast (не поддерживает box-shadow) 
+		if (TV.platform.isLG) TV.addClass(document.body, 'netcast');
 	} /*  
 
 	// WebOs API is unavaliable when "trustLevel":"netcast" in appinfo.json is set
@@ -105,7 +132,9 @@ TV.prototype.onLoad = function() {
 	}
 
 	data.device_id = this.device_id.replace(/(\s|\u00A0)+/g,'');
-	
+	data.model_id = this.model_id;
+	data.support_uhd = this.support_uhd;
+
 	function ready () {
 		// компилируем все найденные шаблоны
 		var templates = TV.find('script[type="text/template"]');

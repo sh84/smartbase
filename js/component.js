@@ -3,6 +3,7 @@ function TVComponent(el, adjacent_buttons, parent, class_name) {
 	this.el.onclick = null;
 	this.class_name = class_name;
 	this.buttons = {};
+	TVButton._initButtons(this.buttons);
 	this.data = null;
 }
 TVComponent.prototype = Object.create(TVButton.prototype);
@@ -51,10 +52,8 @@ TVComponent.prototype.render = function(start_btn_id) {
 	}
 
 	this.clearAll();
-	Object.defineProperty(this.buttons, '_hover_btn', {configurable: true, writable: true, enumerable: false});  // выделенная сейчас кнопка
-	Object.defineProperty(this.buttons, '_act_btn', {configurable: true, writable: true, enumerable: false});    // последняя нажатая кнопка
-	Object.defineProperty(this.buttons, '_start_btn', {configurable: true, writable: true, enumerable: false});  // стартовая кнопка
-
+	TVButton._initButtons(this.buttons);
+	
 	// инициализируем все найденные кнопки внутри компонента
 	var els = TV.find('[data-type="button"]', this.el);
 	for (var i=0; i < els.length; i++) {
@@ -158,11 +157,15 @@ TVComponent.prototype.onmouseout = function(event) {
 TVComponent.prototype.oncursor = function(side) {
 	if (this.buttons._hover_btn) {
 		this.buttons._hover_btn.oncursor(side);
-	} else {
+	} else if (this.buttons._start_btn) {
 		this.buttons._start_btn.onmouseover();
+	} else {
+		TVButton.prototype.oncursor.call(this, side);
 	}
 };
 
 TVComponent.prototype.onenter = function() {
-	if (this.buttons._hover_btn) this.buttons._hover_btn.onmouseclick();
+	if (this.buttons._hover_btn) {
+		this.buttons._hover_btn.onenter ? this.buttons._hover_btn.onenter() : this.buttons._hover_btn.onmouseclick();
+	}
 };

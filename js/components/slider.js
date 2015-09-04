@@ -23,7 +23,7 @@ TVComponents.Slider = function(el, adjacent_buttons, parent, class_name) {
 	this.first_el_pos = null;      // граница первого элемента (левая граница для is_horizontal, верхняя для is_vertical)
 	this.last_el_pos = null;       // граница последнего элемента (правая граница для is_horizontal, нижняя для is_vertical)
 	this.container_el = null;      // элемент-контейнер для кнопок
-	this.container_move = true;    // двигать контейнерпри при листании
+	this.container_move = true;    // двигать контейнер при при листании
 	this.start_for_dynamic = 0;    // номер элемента данных с котрого начинается динамический слайдер
 	this.scrollbar = true;         // показывать ли скролбар
 };
@@ -53,9 +53,9 @@ TVComponents.Slider.prototype.onready = function() {
 	var curr = start;
 	while (curr <= finish) {
 		var item = this._getItem(curr);
-		var el = this._addElement(item);
-		var btn;
-		if (curr >= start_btn && curr <= finish_btn) btn = this._makeBtn(el);
+		var el = this._addElement(item, false, curr >= start_btn && curr <= finish_btn);
+		var btn = null;
+		if (curr >= start_btn && curr <= finish_btn) btn = this._makeBtn(el); 
 		if (curr == start_btn) {
 			this.enable();
 			this.buttons._start_btn = btn;
@@ -81,7 +81,7 @@ TVComponents.Slider.prototype._addNone = function() {
 
     var el = TV.createElement(html);
     this.container_el.appendChild(el);
-}
+};
 
 // добавить новый html-элемент
 TVComponents.Slider.prototype._addElement = function(item, is_first) {
@@ -123,10 +123,36 @@ TVComponents.Slider.prototype._addElement = function(item, is_first) {
 	return el;
 };
 
+TVComponents.Slider.prototype._makeComponents = function(root_el, root_btn) {
+	// инициализируем все найденные компоненты
+	var components = TV.find('[data-type="component"]', root_el);
+	for (var i=0; i < components.length; i++) {
+		var el = components[i];
+		if (!el._attributes.id) throw 'Not defined id for component '+(el.outerHTML||el.innerHTML);
+		var cl_name = el._attributes['class'];
+		var cl = cl_name ? (TVComponents[cl_name] || window[cl_name]) : null;
+		if (cl && typeof(cl) != 'function') throw 'Not defined TVComponents.'+cl_name+' or '+cl_name+' class for component '+el._attributes.id;
+		var comp = cl ? new cl(el, root_btn.buttons, this, cl_name) : new TVComponent(el, root_btn.buttons, this);
+		comp.init();
+	}
+	
+	var first_btn;
+	for (var id in root_btn.buttons) {
+		var btn = root_btn.buttons[id];
+		btn.onclick = function(a, b) {
+			if (this.onclick) this.onclick(a, b);
+		}.bind(this);
+		if (btn.attributes.start && !btn.attributes.disabled && !btn.disabled) root_btn.buttons._start_btn = btn;
+		if (!first_btn && !btn.disabled) first_btn = btn;
+	}
+	if (!root_btn.buttons._start_btn && first_btn) root_btn.buttons._start_btn = first_btn;
+	return !!first_btn;
+};
+
 // создать кнопку на существуещем html-элементе следующим за текущей последней кнопкой
 TVComponents.Slider.prototype._makeBtn = function(el, is_first) {
 	el.setAttribute('data-type', 'button');
-	var btn = new TVButton(el, this.buttons, this);
+	var btn = new TVComponent(el, this.buttons, this);
 	var on_bound = false;
 	if (!this.dynamic) {
 		// выход за пределы слайдера на конечных кнопках
@@ -138,17 +164,33 @@ TVComponents.Slider.prototype._makeBtn = function(el, is_first) {
 	if (is_first) {
 		btn[this.first_side] = on_bound ? 'out' : null;
 		btn[this.last_side] = this.dynamic ? this.first_btn_id : this.first_btn_id || 'out';
-		if (this.buttons[this.first_btn_id]) this.buttons[this.first_btn_id][this.first_side] = btn.id;
+		if (this.buttons[this.first_btn_id]) {
+			this.buttons[this.first_btn_id][this.first_side] = btn.id;
+		} else {
+			if (this.buttons._hover_btn) this.buttons._hover_btn[this.first_side] = btn.id;
+		}
 		this.first_btn_id = btn.id;
 		if (!this.last_btn_id) this.last_btn_id = btn.id;
 	} else {
 		btn[this.last_side] = on_bound ? 'out' : null;
 		btn[this.first_side] = this.dynamic ? this.last_btn_id : this.last_btn_id || 'out';
-		if (this.buttons[this.last_btn_id]) this.buttons[this.last_btn_id][this.last_side] = btn.id;
+		if (this.buttons[this.last_btn_id]) {
+			this.buttons[this.last_btn_id][this.last_side] = btn.id;
+		} else {
+			if (this.buttons._hover_btn) this.buttons._hover_btn[this.last_side] = btn.id;
+		}
 		this.last_btn_id = btn.id;
 		if (!this.first_btn_id) this.first_btn_id = btn.id;
 	}
 	this.btnAttachCallbacks(btn);
+	
+	// если внутри кнопки-компонента есть жругие компоненты - инициализируем их
+	if (!this._makeComponents(el, btn)) {
+		// если компонент нет - клик должен раьботать как у button-а
+		btn.el.onclick = btn.onmouseclick.bind(btn);
+		btn.onenter = btn.onmouseclick.bind(btn);
+	}
+	
 	return btn;
 };
 
@@ -213,18 +255,27 @@ TVComponents.Slider.prototype._movie = function(is_first) {
 
 	// удаляем вышедшую за видимые границы кнопку
 	var btn = is_first ? this.buttons[this.last_btn_id] : this.buttons[this.first_btn_id];
+	var curr_el = btn.el;
 	if (is_first) {
 		this.last_btn_id = btn[this.first_side];
-		this.buttons[this.last_btn_id][this.last_side] = null;
+		if (this.buttons[this.last_btn_id]) this.buttons[this.last_btn_id][this.last_side] = null;
 	} else {
 		this.first_btn_id = btn[this.last_side];
 		if (this.buttons[this.first_btn_id]) this.buttons[this.first_btn_id][this.first_side] = null;
 	}
+	if (!is_first && this.last_btn_id == btn.id || is_first && this.first_btn_id == btn.id) {
+		// сработает когда в слайдере вообще 1 активный элемент (кнопка)
+		this.first_btn_id = null;
+		this.last_btn_id = null;
+		btn.onmouseout();
+	}
 	btn.el.removeAttribute('data-type');
 	btn.remove();
-
+	
 	// обновляем вошедший элемент до кнопки
-	var elem = is_first ? this.buttons[this.first_btn_id].el.previousElementSibling : this.buttons[this.last_btn_id].el.nextElementSibling;
+	var elem = is_first ? this.buttons[this.first_btn_id] : this.buttons[this.last_btn_id];
+	elem = elem ? elem.el : curr_el; // сработает когда в слайдере вообще 1 активный элемент (кнопка)
+	elem = is_first ? elem.previousElementSibling : elem.nextElementSibling; 
 
 	var size = TV.getSize(elem);
 	this._makeBtn(elem, is_first);
