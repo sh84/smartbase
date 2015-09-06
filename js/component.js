@@ -43,7 +43,7 @@ TVComponent.prototype.prerender = function() {
 };
 
 TVComponent.prototype.render = function(start_btn_id) {
-	var is_hover = this.adjacent_buttons._hover_btn == this;
+	var is_hover = this.adjacent_buttons._hover_btn == this || !this.adjacent_buttons._hover_btn;
 	if (this._data_fn) this.data = this._data_fn();
 	
 	// если для компонента есть шаблон - рендерим
@@ -89,7 +89,7 @@ TVComponent.prototype.render = function(start_btn_id) {
 		this.disable();
 		// и переводим с него курсор, если он был активен
 		if (is_hover) {
-			this.adjacent_buttons._start_btn.onmouseover();
+			if (this.adjacent_buttons._start_btn) this.adjacent_buttons._start_btn.onmouseover();
 			is_hover = false;
 		}
 	}

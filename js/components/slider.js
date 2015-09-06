@@ -60,7 +60,7 @@ TVComponents.Slider.prototype.onready = function() {
 			this.enable();
 			this.buttons._start_btn = btn;
 			// еслик компонент активен - на стартовую кнопку устанавливаем курсор
-			if (this.adjacent_buttons._hover_btn == this) this.buttons._start_btn.onmouseover();
+			if (this.adjacent_buttons._hover_btn == this || !this.adjacent_buttons._hover_btn) this.buttons._start_btn.onmouseover();
 		}
 		curr += 1;
 	}

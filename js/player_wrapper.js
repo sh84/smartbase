@@ -220,7 +220,7 @@ TV.PlayerWrapper.prototype._getUrl = function() {
 	if (TV.platform.isSamsung) {
 		var url = this.url;
 		if (~url.indexOf('.m3u8')) {
-			if (!~url.indexOf('?')) url += '?hack_param_for_samsung=1';
+			if (!~url.indexOf('?') && !TV.PlayerWrapper.disable_hack_param_for_samsung) url += '?hack_param_for_samsung=1';
 			url += '|COMPONENT=HLS';
 		}
 		return url;

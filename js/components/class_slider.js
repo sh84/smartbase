@@ -96,7 +96,7 @@ TVComponents.ClassSlider.prototype._setStartButton = function() {
 		}
 	}
 	// еслик компонент активен - на центральную кнопку устанавливаем курсор
-	if (this.adjacent_buttons._hover_btn == this) {
+	if (this.adjacent_buttons._hover_btn == this || !this.adjacent_buttons._hover_btn) {
 		this.buttons._start_btn.onmouseover();
 	}
 };
