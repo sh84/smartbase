@@ -251,20 +251,13 @@ TVComponents.Player.prototype.onvideoprogress = function(time) {
 };
 
 // ошибка при проигрывании
-	TVComponents.Player.prototype.onvideoerror = function(error) {
+TVComponents.Player.prototype.onvideoerror = function(error) {
 	TV.log('onvideoerror', error);
 	TV.show('[data-id="player_error"]', this.el);
 	TV.setHTML('[data-id="player_error"]', error || 'Ошибка', this.el);
 	TV.hide('[data-id="player_loader"]', this.el);
 	if (this.state != 'stop') this.stop();
-	this._inactive_timer = null;
-	TV.log('hide panel');
-	TV.addClass('[data-id="player_panel"]', TVComponents.Player.hidden_panel_class, this.el);
-	app.popups.error.afterhide = function () {
-		this.buttons.close.onmouseclick();
-		app.popups.error.afterhide = function(){};
-	}.bind(this);
-	app.popups.error.show(error || 'Ошибка');
+	this.stopInactive();
 };
 
 TVComponents.Player.prototype.play = function() {

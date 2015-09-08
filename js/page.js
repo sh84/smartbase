@@ -78,6 +78,8 @@ TVPage.prototype.show = function() {
 	if (this.beforeshow) {
 		if (this.beforeshow() === false) return;
 	}
+	if (this.app.curr_popup) this.app.curr_popup.hide();
+	
 	var new_show_args = Array.prototype.slice.call(arguments, 0);
 	var arr_eql = function(a, b) {
 		if (a.length != b.length) return false;
