@@ -357,6 +357,7 @@ TVComponents.Player.prototype.hideSeek = function(force) {
 TVComponents.Player.prototype.updateTimeline = function() {
     //TV.log('updateTimeline', this.curr_time);
 	if (this.isLive()) return;
+	if (!TV.el('[data-id="player_control_time_cur"]', this.el)) return;
 	TV.setHTML('[data-id="player_control_time_cur"]', this.formatTime(this.curr_time), this.el);
 	TV.setHTML('[data-id="player_control_time_total"]', this.formatTime(this.duration), this.el);
 	TV.el('[data-id="player_control_strip_fill"]', this.el).style.width = (this.curr_time*100 / this.duration).toFixed(2) + '%';
