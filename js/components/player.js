@@ -1,19 +1,22 @@
 TVComponents.Player = function(el, adjacent_buttons, parent, class_name) {
 	TVComponent.call(this, el, adjacent_buttons, parent, class_name);
 	this.data = {
-		url: null,		    // урл видео
-		live: false,        // признак лайва
-		seek: null          // сделать сик при старте
+		url: null,		       // урл видео
+		live: false,           // признак лайва (скрыт таймлайн)
+		seek: null,            // сделать сик при старте
+		duration: null,        // предопределенная длительность, секунд
+		base_time: null        // базовое время текщей позиции, секунд
 	};
-	this.state = 'stop';	// состояния: stop, play, pause
-	this.curr_time = 0;		// текущее время в секундах
-	this.buffering = false;	// признак буферизации
-	this.duration = null;	// длительность видео в секундах
-	this.onstatechange = null;	// колбэк изменения состояния проигрывания
+	this.state = 'stop';	   // состояния: stop, play, pause
+	this.curr_time = 0;		   // текущее время в секундах
+	this.buffering = false;	   // признак буферизации
+	this.duration = null;	   // длительность видео в секундах
+	this.onstatechange = null; // колбэк изменения состояния проигрывания
 	
 	this.autostart = this.attributes['autostart'];
 	this.seek_show_time = this.attributes['seek_show_time'] ? this.attributes['seek_show_time']*1 : 1000;  // время отображения перемотки
-	this.inactive_time = this.attributes['inactive_time'] ? this.attributes['inactive_time']*1 : 3000;    // время бездействия до скрытия панели
+	this.inactive_time = this.attributes['inactive_time'] ? this.attributes['inactive_time']*1 : 3000;     // время бездействия до скрытия панели
+	this.inactive_without_action = this.attributes['inactive_without_action'] && this.attributes['inactive_without_action'] != "false"; // обрабатывать кнопки и при скрытой панели
 	
 	this._stop_after_buffering = false;	// вызывать stop после буферизации
 	this._show_seek = null;             // признак отображения перемотки (время начала показа)
@@ -60,12 +63,10 @@ TVComponents.Player.prototype.onready = function() {
 	this.video.setDisplayArea(0, 0, rect.width, rect.height);
 	// стартуем
 	this.video.url = this.data.url;
-	
 	if (this.autostart) setTimeout(function() {
 		this.play();
 	}.bind(this), 0);
-
-
+	
 	this.buttons.play.onclick = function() {
 		this.buttons._act_btn = null; // разрешаем повторное нажатие
 		if (this.state == 'play') {
@@ -101,7 +102,7 @@ TVComponents.Player.prototype.onready = function() {
 				if (this._where_to_seek > this.duration) this._where_to_seek = this.duration;
 				this.showSeek(this._where_to_seek);
 			} else {
-				TVButton.prototype.oncursor.call(this.buttons.timeline, side)
+				TVButton.prototype.oncursor.call(this.buttons.timeline, side);
 			}
 		}.bind(this);
 
@@ -164,12 +165,12 @@ TVComponents.Player.prototype.onAnyKey = function(key_code) {
 		this.buttons.close.onmouseclick();
 		return false;
 	}
-	if (hidden_panel) return false;
+	if (hidden_panel && !this.inactive_without_action) return false;
 };
 
 // видео объект получил метаданные
 TVComponents.Player.prototype.onvideoready = function() {
-	this.duration = this.video.getDuration() / 1000;
+	this.duration = this.data.duration ? this.data.duration : this.video.getDuration() / 1000;
 	this._videoready = true;
 	if (this.duration == -1) {
 		
@@ -202,7 +203,7 @@ TVComponents.Player.prototype.onvideobuffering = function(val) {
 
 // прогресс проигрывания
 TVComponents.Player.prototype.onvideoprogress = function(time) {
-	//TV.log('onvideoprogress', time);
+	TV.log('onvideoprogress', time);
 	if (this.buffering) this.onvideobuffering(100);
 	if (this._show_seek) this.hideSeek();
 	if (this.state == 'stop') return;
@@ -237,7 +238,7 @@ TVComponents.Player.prototype.onvideoprogress = function(time) {
 		this.updateTimeline();
 		return;
 	}
-	this.curr_time = time / 1000;
+	this.curr_time = (this.data.base_time || 0) + time / 1000;
 	if (!this.isLive()) {
 		this.updateTimeline();
 		var end_time = (TV.platform.isLG || TV.platform.isWebOs) ? this.duration-0.99 : this.duration;
@@ -269,7 +270,7 @@ TVComponents.Player.prototype.play = function() {
 	if (this.state == 'stop') {
 		this.stateChange('play');
 		// обновляем таймлайн
-		this.curr_time = 0;
+		this.curr_time = this.data.base_time || 0;
 		this.updateTimeline();
 		// лоадер
 		TV.show('[data-id="player_loader"]', this.el);

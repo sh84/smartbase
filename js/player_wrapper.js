@@ -26,7 +26,6 @@ TV.PlayerWrapper = function(el) {
         }
         this.el = TV.PlayerWrapper.video_el;
 	} else if (!this.el) {
-		//'http://c-2-2.videomore.ru/v-12-2/5c/65/5c659bfdd78aa5f9a2d01467648f9f03/5c659bfdd78aa5f9a2d01467648f9f03-q5.mp4?s=Evzmr0UdEXm2KzM9PKccDA&e=1390835341';
 		this.el = document.createElement('video');
 		document.body.insertBefore(this.el, document.body.firstChild);
 	}
@@ -38,6 +37,7 @@ TV.PlayerWrapper = function(el) {
     this._trick_seek_from = 0;              // Откуда переходим
     this._trick_seek_threshold = 5000;      // Допустимая ошибка перехода
 };
+TV.PlayerWrapper.server_seek = null;
 
 TV.PlayerWrapper.prototype.attachCallbacks = function() {
 	if (TV.platform.isSamsung) {
@@ -66,7 +66,7 @@ TV.PlayerWrapper.prototype.attachCallbacks = function() {
         var info_ready = false;
 
         this.el.onPlayStateChange = function() {
-            TV.log('onPlayStateChange', this.el.playState, this.el.playTime)
+            TV.log('onPlayStateChange', this.el.playState, this.el.playTime);
             switch (this.el.playState) {
                 case 5: // finished
                     break;
@@ -308,6 +308,7 @@ TV.PlayerWrapper.prototype.stop = function() {
 };
 
 TV.PlayerWrapper.prototype.seek = function(seek_time) {
+	if (TV.PlayerWrapper.server_seek  && TV.PlayerWrapper.server_seek(this, seek_time) === false) return;
 	if (TV.platform.isSamsung) {
 		var val = seek_time - this._curr_time;
 		if (val > 0) {
