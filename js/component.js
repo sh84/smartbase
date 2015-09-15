@@ -42,8 +42,13 @@ TVComponent.prototype.prerender = function() {
 	// вызывается перед render
 };
 
+TVComponent.prototype.isHover = function() {
+	//return this.adjacent_buttons._hover_btn == this || !this.adjacent_buttons._hover_btn;
+	return this.adjacent_buttons._hover_btn == this || Object.keys(this.adjacent_buttons).length == 1;
+};
+
 TVComponent.prototype.render = function(start_btn_id) {
-	var is_hover = this.adjacent_buttons._hover_btn == this || !this.adjacent_buttons._hover_btn;
+	var is_hover = this.isHover();
 	if (this._data_fn) this.data = this._data_fn();
 	
 	// если для компонента есть шаблон - рендерим

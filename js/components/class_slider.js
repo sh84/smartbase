@@ -21,9 +21,9 @@ TVComponents.ClassSlider.prototype.onready = function() {
 };
 
 TVComponents.ClassSlider.prototype._movie = function(is_first) {
-	TVComponents.Slider.prototype._movie.call(this, is_first);
+	if (TVComponents.Slider.prototype._movie.call(this, is_first) === false) return false;
 	this._setClasses();
-	return true;
+	return false;
 };
 
 TVComponents.ClassSlider.prototype._setClasses = function() {
@@ -96,9 +96,7 @@ TVComponents.ClassSlider.prototype._setStartButton = function() {
 		}
 	}
 	// еслик компонент активен - на центральную кнопку устанавливаем курсор
-	if (this.adjacent_buttons._hover_btn == this || !this.adjacent_buttons._hover_btn) {
-		this.buttons._start_btn.onmouseover();
-	}
+	if (this.isHover()) this.buttons._start_btn.onmouseover();
 };
 
 TVComponents.ClassSlider.prototype._setStylesheet = function(styles) {

@@ -7,6 +7,7 @@ TVComponents.Slider = function(el, adjacent_buttons, parent, class_name) {
 	this.is_horizontal = !this.is_vertical;
 	this.nav_buttons = this.attributes['nav_buttons'] ? true : false;
     this.use_none = this.attributes['none'] ? true : false;
+    this.movie_debounce = this.attributes['movie_debounce'] * 1; // движение не чаще чем раз в movie_debounce мс
 
 	if (this.is_horizontal) {
 		this.first_side = 'left';
@@ -60,7 +61,7 @@ TVComponents.Slider.prototype.onready = function() {
 			this.enable();
 			this.buttons._start_btn = btn;
 			// еслик компонент активен - на стартовую кнопку устанавливаем курсор
-			if (this.adjacent_buttons._hover_btn == this || !this.adjacent_buttons._hover_btn) this.buttons._start_btn.onmouseover();
+			if (this.isHover()) this.buttons._start_btn.onmouseover();
 		}
 		curr += 1;
 	}
@@ -213,8 +214,7 @@ TVComponents.Slider.prototype.oncursor = function(side) {
 	if (this.buttons._hover_btn && (!this.buttons._hover_btn[side] || this.movie_on_all)
 			&& (this.is_horizontal && (side == 'left' || side == 'right') || this.is_vertical && (side == 'up' || side == 'down'))) {
 		var is_first = this.is_horizontal && side == 'left' || this.is_vertical && side == 'up';
-		var r = this._movie(is_first);
-		if (r === true) return;
+		if (this._movie(is_first) === false) return;
 	}
 	// перерисовываем скрол
 	this.setScrollbar();
@@ -249,6 +249,11 @@ TVComponents.Slider.prototype.moveTo = function(el) {
 };
 
 TVComponents.Slider.prototype._movie = function(is_first) {
+	// слишком частое нажатие 
+	if (this.movie_debounce) {
+		if (this._movie_time && this._movie_time + this.movie_debounce > Date.now()) return false;
+		this._movie_time = Date.now();
+	}
 	if (!this.dynamic && is_first && this.start_position <= 0) return;
 	if (!this.dynamic && !is_first && this.start_position + this.count >= this.data.length) return;
 	this.start_position += is_first ? -1 : 1;
@@ -318,7 +323,7 @@ TVComponents.Slider.prototype._initScrollbarButtons = function() {
 		if (el) {
 			el.setAttribute('data-type', 'button');
 			new TVButton(el, this.buttons, this).onclick = function() {
-				this._movie(is_first);
+				if (this._movie(is_first) === false) return;
 				this.setScrollbar();
 			}.bind(this);
 		}

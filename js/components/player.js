@@ -203,7 +203,7 @@ TVComponents.Player.prototype.onvideobuffering = function(val) {
 
 // прогресс проигрывания
 TVComponents.Player.prototype.onvideoprogress = function(time) {
-	TV.log('onvideoprogress', time);
+	//TV.log('onvideoprogress', time);
 	if (this.buffering) this.onvideobuffering(100);
 	if (this._show_seek) this.hideSeek();
 	if (this.state == 'stop') return;
@@ -254,6 +254,7 @@ TVComponents.Player.prototype.onvideoprogress = function(time) {
 // ошибка при проигрывании
 TVComponents.Player.prototype.onvideoerror = function(error) {
 	TV.log('onvideoerror', error);
+	if (!TV.el('[data-id="player_error"]', this.el)) return;
 	TV.show('[data-id="player_error"]', this.el);
 	TV.setHTML('[data-id="player_error"]', error || 'Ошибка', this.el);
 	TV.hide('[data-id="player_loader"]', this.el);
