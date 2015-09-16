@@ -118,6 +118,7 @@ TVPage.prototype.show = function() {
 TVPage.prototype.hide = function() {
 	if (this.app.curr_page != this) throw 'Can not hide non current page';
 	if (!this.app.history.length) throw 'Empty pages history - no page to show';
+	this.beforehide && this.beforehide();
 	var last = this.app.history.pop();
 	var page = this.app.pages[last[0]];
 	this.app.curr_page.no_history = true; // так заставляем show не запоминать еще раз текущую страницу

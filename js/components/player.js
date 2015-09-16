@@ -5,7 +5,8 @@ TVComponents.Player = function(el, adjacent_buttons, parent, class_name) {
 		live: false,           // признак лайва (скрыт таймлайн)
 		seek: null,            // сделать сик при старте
 		duration: null,        // предопределенная длительность, секунд
-		base_time: null        // базовое время текщей позиции, секунд
+		max_seek: null,        // крайняя позиция допустимого сика, секунд (null - использовать duration)
+		base_time: null        // базовое время текщей позиции, секунд 
 	};
 	this.state = 'stop';	   // состояния: stop, play, pause
 	this.curr_time = 0;		   // текущее время в секундах
@@ -37,7 +38,10 @@ TVComponents.Player.prototype.isLive = function() {
 
 TVComponents.Player.prototype.clearAll = function() {
 	if (this.video) this.video.clear();
-	clearTimeout(this._inactive_timer);
+	if (this._inactive_timer) clearTimeout(this._inactive_timer);
+	this._inactive_timer = null;
+	if (this._seek_timer) clearTimeout(this._seek_timer);
+	this._seek_timer = null;
 	document.removeEventListener('mousemove', this._onmousemove);
 };
 
@@ -99,7 +103,7 @@ TVComponents.Player.prototype.onready = function() {
 				if (side == 'left') this._where_to_seek -= 30;
 				if (side == 'right') this._where_to_seek += 30;
 				if (this._where_to_seek < 0) this._where_to_seek = 0;
-				if (this._where_to_seek > this.duration) this._where_to_seek = this.duration;
+				if (this._where_to_seek > (this.data.max_seek || this.duration)) this._where_to_seek = this.duration;
 				this.showSeek(this._where_to_seek);
 			} else {
 				TVButton.prototype.oncursor.call(this.buttons.timeline, side);
@@ -157,15 +161,59 @@ TVComponents.Player.prototype.onAnyKey = function(key_code) {
 	} else if (key_code == TV.keys.stop) {
 		this.buttons.stop.onmouseclick();
 	} else if (key_code == TV.keys.rw) {
-		if (this.state == 'play') this.seek(this.curr_time - 30, true);
+		if (this.state == 'play') this.btnProcessSeek(1);
 	} else if (key_code == TV.keys.ff) {
-		if (this.state == 'play') this.seek(this.curr_time + 30, true);
+		if (this.state == 'play') this.btnProcessSeek(-1);
 	} else if (key_code == TV.keys.return) {
 		if (hidden_panel) return false;
 		this.buttons.close.onmouseclick();
 		return false;
 	}
 	if (hidden_panel && !this.inactive_without_action) return false;
+};
+
+TVComponents.Player.prototype.btnProcessSeek = function(direction) {
+	if (this._where_to_seek === null && this.state != 'play') return;
+	if (this.state == 'play') this.pause();
+	if (this._where_to_seek === null) this._where_to_seek = this.curr_time;
+	if (this._seek_direction != direction) {
+		this._seek_direction = direction;
+		this._seek_step = 0;
+	}
+	// ускорение
+	var step = 20;
+	if (this._seek_step > 12) {
+		step = 90;
+	} else if (this._seek_step > 8) {
+		step = 60;
+	} else if (this._seek_step > 4) {
+		step = 40;
+	}
+	
+	this._where_to_seek += step * direction;
+	if (this._where_to_seek >= (this.data.max_seek || this.duration)) {
+		this._where_to_seek = this.data.max_seek || this.duration;
+	} else if (this._where_to_seek <= 0) {
+		this._where_to_seek = 0;
+	} else {
+		this._seek_step += 1;
+	}
+	TV.log('btnProcessSeek', direction, step, this._seek_step, this._where_to_seek);
+	this.stopInactive();
+	this.showSeek(this._where_to_seek);
+	TV.setHTML('[data-id="player_control_time_cur"]', this.formatTime(this._where_to_seek), this.el);
+	
+	if (this._seek_timer) clearTimeout(this._seek_timer);
+	this._seek_timer = setTimeout(function() {
+		this.seek(this._where_to_seek);
+		this.hideSeek(true);
+		this.updateTimeline();
+		if (this.state != 'play') this.play();
+		this._where_to_seek = null;
+		this._seek_direction = null;
+		this._seek_step = null;
+		this._seek_timer = null;
+	}.bind(this), 700);
 };
 
 // видео объект получил метаданные
@@ -320,7 +368,7 @@ TVComponents.Player.prototype.stop = function() {
 TVComponents.Player.prototype.seek = function(seek_time, show) {
 	TV.log('seek', seek_time);
 	if (seek_time < 0) seek_time = 0;
-	if (seek_time > this.duration) seek_time = this.duration;
+	if (seek_time > (this.data.max_seek || this.duration)) seek_time = this.data.max_seek || this.duration;
 	if (this.buffering || seek_time == this.curr_time) return;
 	if (show) this.showSeek(seek_time);
 	this.video.seek(seek_time*1000);
@@ -377,8 +425,8 @@ TVComponents.Player.prototype.formatTime = function(val) {
 
 // начать отсчет времени неактивности до скрытия панели
 TVComponents.Player.prototype.startInactive = function() {
-	if (this._inactive_timer) clearTimeout(this._inactive_timer);
 	TV.log('startInactive');
+	if (this._inactive_timer) clearTimeout(this._inactive_timer);
 	this._inactive_timer = setTimeout(function() {
 		this._inactive_timer = null;
 		this._hidden_panel = true;

@@ -339,7 +339,7 @@ TV.PlayerWrapper.prototype.seek = function(seek_time) {
             }
 
             var trick_seek_diff = this.el.playPosition - this._trick_seek_position;
-            var correct_seek_position = Math.floor(this._trick_seek_position * this._trick_seek_position / this.el.playPosition)
+            var correct_seek_position = Math.floor(this._trick_seek_position * this._trick_seek_position / this.el.playPosition);
             if (Math.abs(trick_seek_diff) > this._trick_seek_threshold) {
                 TV.log('Philips trick seek to ' + correct_seek_position + ' now pos is ' + this.el.playPosition + ' have to be ' + this._trick_seek_position);
                 this.el.seek(correct_seek_position);
@@ -374,6 +374,7 @@ TV.PlayerWrapper.prototype.setScreenSaverOff = function() {
 // остановка и очистка
 TV.PlayerWrapper.prototype.clear = function() {
 	if (this._timer) clearInterval(this._timer);
+	this._timer = null;
 	this.stop();
 	var listeners;
 	if (TV.platform.isSamsung) {
