@@ -27,10 +27,9 @@ if (!Function.prototype.bind) {
 
 	if (navigator.userAgent.match(/smarttv/i)) p = 'samsung';
 	if (navigator.userAgent.match(/LG Browser/i)) p = 'lg';
-	if (navigator.userAgent.match(/Web0S/i)) p = 'webos';
-
-    // Может лучше искать NETTV: NETTV/4.0.2? 
-    if (navigator.userAgent.match(/Philips/i) || navigator.userAgent.match(/Streamium/i) || navigator.userAgent.match(/NETTV\/4/i)) p = 'philips';
+	if (navigator.userAgent.match(/WebOS|Web0S/i)) p = 'webos';
+	// Может лучше искать NETTV: NETTV/4.0.2? 
+	if (navigator.userAgent.match(/Philips/i) || navigator.userAgent.match(/Streamium/i) || navigator.userAgent.match(/NETTV\/4/i)) p = 'philips';
 
 	// занчение: [тип <string>, эмулятор <boolean>], например ['samsung', true]
 	TV.platform = [p, em];
@@ -38,7 +37,7 @@ if (!Function.prototype.bind) {
 	TV.platform.isSamsung = p == 'samsung';
 	TV.platform.isBrowser = p == 'browser';
 	TV.platform.isWebOs = p == 'webos';
-    TV.platform.isPhilips = p == 'philips';
+	TV.platform.isPhilips = p == 'philips';
 	TV.platform.isEmulator = em;
 
 })();

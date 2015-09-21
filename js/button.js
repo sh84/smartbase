@@ -28,13 +28,13 @@ function TVButton(el, adjacent_buttons, parent) {
 	}
 
 	this.adjacent_buttons[this.id] = this;
-	this.el.onmouseover = function() {
+	this.el.onmouseover = function(e) {
 		if (this.not_handle_mouse) return;
-		this.onmouseover();
+		this.onmouseover(e);
 	}.bind(this);
-	this.el.onmouseout = function() {
+	this.el.onmouseout = function(e) {
 		if (this.not_handle_mouse) return;
-		this.onmouseout();
+		this.onmouseout(e);
 	}.bind(this);
 	this.el.onclick = this.onmouseclick.bind(this);
 }
