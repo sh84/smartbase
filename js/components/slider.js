@@ -60,6 +60,11 @@ TVComponents.Slider.prototype.onready = function() {
 		if (curr == start_btn) {
 			this.enable();
 			this.buttons._start_btn = btn;
+			// если hover-а у adjacent_buttons нет, но сладйер start="true", и parent-а нет, или он активный
+			if (!this.isHover() && this.attributes.start && (!this.parent || this.parent.isHover())) {
+				this.adjacent_buttons._start_btn = this;
+				this.onmouseover();
+			} 
 			// еслик компонент активен - на стартовую кнопку устанавливаем курсор
 			if (this.isHover()) this.buttons._start_btn.onmouseover();
 		}

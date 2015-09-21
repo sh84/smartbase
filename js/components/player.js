@@ -238,6 +238,7 @@ TVComponents.Player.prototype.onvideobuffering = function(val) {
 		if (this.buffering) {
 			this.buffering = false;
 			TV.hide('[data-id="player_loader"]', this.el);
+			TV.removeClass(this.el, 'player_buffering');
 			if (this._stop_after_buffering) {
 				this._stop_after_buffering = false;
 				this.stop();
@@ -246,6 +247,7 @@ TVComponents.Player.prototype.onvideobuffering = function(val) {
 	} else {
 		this.buffering = true;
 		TV.show('[data-id="player_loader"]', this.el);
+		TV.addClass(this.el, 'player_buffering');
 	}
 };
 
@@ -306,6 +308,7 @@ TVComponents.Player.prototype.onvideoerror = function(error) {
 	TV.show('[data-id="player_error"]', this.el);
 	TV.setHTML('[data-id="player_error"]', error || 'Ошибка', this.el);
 	TV.hide('[data-id="player_loader"]', this.el);
+	TV.removeClass(this.el, 'player_buffering');
 	if (this.state != 'stop') this.stop();
 	this.stopInactive();
 };
@@ -323,6 +326,7 @@ TVComponents.Player.prototype.play = function() {
 		this.updateTimeline();
 		// лоадер
 		TV.show('[data-id="player_loader"]', this.el);
+		TV.addClass(this.el, 'player_buffering');
 		// запускаем
 		this.buffering = true;
 		this.video.play();
