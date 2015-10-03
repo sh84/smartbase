@@ -371,7 +371,7 @@ TVComponents.Slider.prototype.onButtonClick = function(btn) {
 TVComponents.Slider.prototype.onButtonHover = function(btn) {
 	// перемещаем start
 	this.buttons._start_btn = this.buttons._hover_btn;
-	if (this.onhover) this.onhover(btn.attributes.key);
+	if (this.onhover) this.onhover(btn.attributes.key, btn);
 };
 
 TVComponents.Slider.prototype.getCurrItemID = function() {

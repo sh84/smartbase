@@ -201,7 +201,10 @@ TVComponents.Player.prototype.btnProcessSeek = function(direction) {
 	TV.log('btnProcessSeek', direction, step, this._seek_step, this._where_to_seek);
 	this.stopInactive();
 	this.showSeek(this._where_to_seek);
-	TV.setHTML('[data-id="player_control_time_cur"]', this.formatTime(this._where_to_seek), this.el);
+	/*setTimeout(function() {
+		TV.setHTML('[data-id="player_control_time_cur"]', this.formatTime(this._where_to_seek), this.el);
+	}.bind(this), 100);
+	*/
 	
 	if (this._seek_timer) clearTimeout(this._seek_timer);
 	this._seek_timer = setTimeout(function() {
