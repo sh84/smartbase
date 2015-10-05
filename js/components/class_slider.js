@@ -1,12 +1,13 @@
 TVComponents.ClassSlider = function(el, adjacent_buttons, parent, class_name) {
 	TVComponents.Slider.call(this, el, adjacent_buttons, parent, class_name);
 	if (this.count % 2 == 0) throw 'The data-count of ClassSlider must not be even.';
-	this.dynamic = true;
 	this.template = 'Slider';
 	this.container_move = false;
 	this.movie_on_all = true;
-	this.start_for_dynamic = -Math.floor(this.count/2);
-	this.set_positions = this.attributes['positions'] ? true : false; // расчитывать позиции автоматически
+	this.dynamic = true;
+	this.scrollbar = false;
+	if (typeof(this.attributes['start_offset']) == 'undefined') this.start_offset = Math.floor(this.count/2);
+	this.set_positions = this.attributes['positions'] ? true : false;                  // расчитывать позиции автоматически
 	this.distance = this.attributes['distance'] ?  this.attributes['distance']/1 : 40; // расстояние между элементами
 };
 TVComponents.ClassSlider.prototype = Object.create(TVComponents.Slider.prototype);
@@ -28,11 +29,12 @@ TVComponents.ClassSlider.prototype._movie = function(is_first) {
 
 TVComponents.ClassSlider.prototype._setClasses = function() {
 	var els = this.container_el.children;
+	var center = Math.floor(this.count/2);
 	if (!this.set_positions) {
 		for (var i=0; i < els.length; i++) {
 			var cl = TVComponents.ClassSlider.middle_class;
-			if (i < 1 - this.start_for_dynamic) cl = TVComponents.ClassSlider.prev_class+(1 - i - this.start_for_dynamic);
-			if (i > 1 - this.start_for_dynamic) cl = TVComponents.ClassSlider.next_class+(-1 + i + this.start_for_dynamic);
+			if (i < 1 + center) cl = TVComponents.ClassSlider.prev_class+(1 - i + center);
+			if (i > 1 + center) cl = TVComponents.ClassSlider.next_class+(-1 + i - center);
 			els[i].className = cl;
 		}
 	} else {
@@ -52,7 +54,7 @@ TVComponents.ClassSlider.prototype._setClasses = function() {
 		// каждый раз равную позиции последнего - distance - размер самого элемента 
 		var prev_pos = middle_pos;
 		for(var k = middle_index-1; k >= 0; k--) {
-			item_class = TVComponents.ClassSlider.prev_class+(1 - k - this.start_for_dynamic)+'-'+this.id ;
+			item_class = TVComponents.ClassSlider.prev_class+(1 - k + center)+'-'+this.id ;
 			if (this.is_horizontal) {
 				prev_pos -= TV.getSize(els[k]).width + this.distance;
 				styles += '.'+item_class.replace(/ /g, '.')+' {left: '+prev_pos+'px; will-change: left, transform;} ';
@@ -67,7 +69,7 @@ TVComponents.ClassSlider.prototype._setClasses = function() {
 		// каждый раз равную позиции последнего + его размеру + distance
 		for(var j = middle_index; j < els_length; j++) {
 			item_class = (last_pos == middle_pos) ? TVComponents.ClassSlider.middle_class+'-'+this.id 
-				: TVComponents.ClassSlider.next_class+(-1 + j + this.start_for_dynamic)+'-'+this.id;
+				: TVComponents.ClassSlider.next_class+(-1 + j - center)+'-'+this.id;
 			if (this.is_horizontal) {
 				styles += '.'+item_class.replace(/ /g, '.')+' {left: '+last_pos+'px; will-change: left, transform;} ';
 				last_pos += TV.getSize(els[j]).width + this.distance;

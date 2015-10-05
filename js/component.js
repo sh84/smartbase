@@ -43,8 +43,7 @@ TVComponent.prototype.prerender = function() {
 };
 
 TVComponent.prototype.isHover = function() {
-	//return this.adjacent_buttons._hover_btn == this || !this.adjacent_buttons._hover_btn;
-	return this.adjacent_buttons._hover_btn == this || Object.keys(this.adjacent_buttons).length == 1;
+	return this.adjacent_buttons._hover_btn == this || !this.parent && Object.keys(this.adjacent_buttons).length == 1;
 };
 
 TVComponent.prototype.render = function(start_btn_id) {
@@ -134,6 +133,12 @@ TVComponent.prototype.render = function(start_btn_id) {
 	// реализуем onclick для компонента
 	for (var id in this.buttons) {
 		this.buttons[id].onclick = this.onButtonClick.bind(this);
+		this.buttons[id].onhover = this.onButtonHover.bind(this);
+	}
+	
+	// реализуем onhover для компонента
+	for (var id in this.buttons) {
+		this.buttons[id].onhover = this.onButtonHover.bind(this);
 	}
 
 	if (this.onready) this.onready();
@@ -143,9 +148,15 @@ TVComponent.prototype.onButtonClick = function(btn) {
 	if (this.onclick) this.onclick(btn.id, btn);
 };
 
+TVComponent.prototype.onButtonHover = function(btn) {
+	// перемещаем start
+	this.buttons._start_btn = this.buttons._hover_btn;
+	if (this.onhover) this.onhover(btn.id, btn);
+};
+
 TVComponent.prototype.onmouseover = function(event) {
-	TVButton.prototype.onmouseover.call(this);
-	if (!event && this.buttons._start_btn && !this.buttons._hover_btn && this.buttons._start_btn) this.buttons._start_btn.onmouseover();
+	TVButton.prototype.onmouseover.call(this, event);
+	if (!event && this.buttons._start_btn && !this.buttons._hover_btn) this.buttons._start_btn.onmouseover(event);
 };
 
 TVComponent.prototype.onmouseout = function(event) {

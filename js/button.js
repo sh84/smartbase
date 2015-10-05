@@ -19,6 +19,8 @@ function TVButton(el, adjacent_buttons, parent) {
 	this.down = this.attributes['btn-down'];
 	this.left = this.attributes['btn-left'];
 	this.not_handle_mouse = this.attributes['not_handle_mouse']; // не реагировать на движения мышкой
+	this.not_hover_on_bound = this.attributes['not_hover_on_bound']; // не разрешать наводить на элементы выходящие за границу экрана на столько пикселей
+	this.hover_on_bound = this.attributes['hover_on_bound']; // разрешать наводить на элементы выходящие за границу экрана
 	if (this.attributes['btn']) {
 		var s = this.attributes['btn'].split(',');
 		if (s[0]) this.up = s[0].trim();
@@ -58,13 +60,13 @@ TVButton.initAll = function(page, start_btn_id) {
 
 	// инициализируем все найденные компоненты
 	var components = TV.find('[data-type="component"]', page instanceof TVPage ? null : page.el);
-	for (var i=0; i < components.length; i++) {
-		var el = components[i];
+	components.map(function(el) {
 		if (!el._attributes.id) throw 'Not defined id for component '+(el.outerHTML||el.innerHTML);
 		var cl_name = el._attributes['class'];
 		var cl = cl_name ? (TVComponents[cl_name] || window[cl_name]) : null;
 		if (cl && typeof(cl) != 'function') throw 'Not defined TVComponents.'+cl_name+' or '+cl_name+' class for component '+el._attributes.id;
-		var comp = cl ? new cl(el, page.buttons, null, cl_name) : new TVComponent(el, page.buttons);
+		return cl ? new cl(el, page.buttons, null, cl_name) : new TVComponent(el, page.buttons);
+	}.bind(this)).map(function(comp) {
 		// если start_btn_id в форме 'id1.id2, трактуем это как id1 компонента и id2 кнопки этого компонента
 		var comp_start_btn_id = null;
 		if (start_btn_id && start_btn_id.indexOf(el._attributes.id+'.') === 0) {
@@ -72,7 +74,6 @@ TVButton.initAll = function(page, start_btn_id) {
 			start_btn_id_replaced = start_btn_id.replace('.'+comp_start_btn_id, '');
 		}
 		comp.init(comp_start_btn_id);
-
 		// из найденных кнопок исключаем кнопки компонентов
 		for (var btn_id in comp.buttons) {
 			for (var k in els) {
@@ -82,7 +83,7 @@ TVButton.initAll = function(page, start_btn_id) {
 				}
 			}
 		}
-	}
+	}.bind(this));
 
 	// инициализируем все кнопки
 	for (var i=0; i < els.length; i++) {
@@ -171,17 +172,28 @@ TVButton.prototype.clear = function() {
 };
 
 TVButton.prototype.isMouseOnly = function() {
-	return (this.parent || !this.parent && Object.keys(this.adjacent_buttons).length  > 1)
-		&& !this.left && !this.right && !this.up && !this.down;
+	var buttons_count = 0;
+	for (var i in this.adjacent_buttons) {
+		if (!this.adjacent_buttons[i].disabled) buttons_count += 1;
+	}
+	return (this.parent || !this.parent && buttons_count  > 1) && !this.left && !this.right && !this.up && !this.down;
 };
 
-TVButton.prototype.onmouseover = function() {
+TVButton.prototype.onmouseover = function(e) {
+	if (this.disabled) return;
+	// логика запрещения наведения (мышкой!) на частично/полностью скрытые кнопки 
+	var not_hover_on_bound = false;
+	if ((TV.app.not_hover_on_bound || TV.app.not_hover_on_bound === '0') && !this.hover_on_bound) not_hover_on_bound = TV.app.not_hover_on_bound * 1;
+	if (this.not_hover_on_bound || this.not_hover_on_bound === '0') not_hover_on_bound = this.not_hover_on_bound * 1;
+	if (not_hover_on_bound !== false && e && !TV.isFullVisible(this.el, not_hover_on_bound)) return;
 	TV.addClass(this.el, TVButton.hover_class);
+	var hover_btn = this.adjacent_buttons._hover_btn;
+	if (hover_btn == this) return;
+	if (hover_btn) hover_btn.onmouseout();
 	if (!this.isMouseOnly()) {
-		var hover_btn = this.adjacent_buttons._hover_btn;
-		if (this.disabled || hover_btn == this) return;
-		if (hover_btn) hover_btn.onmouseout();
 		this.adjacent_buttons._hover_btn = this;
+	} else {
+		e && e.stopPropagation();
 	}
 	if (this.onhover) this.onhover(this);
 };
@@ -197,16 +209,18 @@ TVButton.prototype.onmouseclick = function() {
 	if (!this.isMouseOnly()) {
 		var act_btn = this.adjacent_buttons._act_btn;
 		if (act_btn == this) return; // предотвращаем двойное нажатие
-		if (act_btn) TV.removeClass(act_btn.el, TVButton.act_class);
+		for (var btn in this.adjacent_buttons) {
+			if (this.adjacent_buttons[btn]) TV.removeClass(this.adjacent_buttons[btn].el, TVButton.act_class);
+		};
 		TV.addClass(this.el, TVButton.act_class);
 		this.adjacent_buttons._act_btn = this;
 	}
 	TV.addClass(this.el, TVButton.pressed_class);
 	var btn_id = this.id;
 	setTimeout(function() {
-		var el = TV.el('[data-type][data-id="'+btn_id+'"]');
+		var el = TV.el('[data-type][data-id="'+btn_id+'"]', this.parent ? this.parent.el : null);
 		TV.removeClass(el, TVButton.pressed_class);
-	}, 300);
+	}.bind(this), 300);
 	if (this.onclick) this.onclick(this);
 };
 
@@ -241,6 +255,7 @@ TVButton.prototype.disable = function() {
 	if (this.disabled) return;
 	this.disabled = true;
 	TV.addClass(this.el, TVButton.disabled_class);
+	TV.removeClass(this.el, TVButton.hover_class);
 	for (var id in this.adjacent_buttons) {
 		var btn = this.adjacent_buttons[id];
 		if (btn.left == this.id) {
@@ -300,5 +315,11 @@ TVButton.prototype.resetAct = function() {
 	if (this.adjacent_buttons._act_btn == this) {
 		TV.removeClass(this.el, TVButton.act_class);
 		this.adjacent_buttons._act_btn = null;
+	}
+};
+
+TVButton.prototype.findButtonByEl = function(el) {
+	for (var i in this.buttons) {
+		if (this.buttons[i].el == el) return this.buttons[i];
 	}
 };

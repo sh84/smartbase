@@ -4,6 +4,8 @@ TV.PlayerWrapper = function(el) {
 	this.onprogress = null;   // прогресс проигрывания, time в мс
 	this.onbuffering = null;  // начало, окончание и прогресс буферизации
 	this.onerror = null;      // ошибка воспроизведения
+	this.video_window_w = null; // размер видео-окна. используется для Samsung
+	this.video_window_h = null;
 
 	this.el = TV.el(el);
 	if (this.el) TV.PlayerWrapper.video_el = this.el;
@@ -11,6 +13,7 @@ TV.PlayerWrapper = function(el) {
 		if (!this.el) throw 'Not defined video element for player';
 		this._body_background = document.body.style.background;
 		document.body.style.background = 'none';
+		this._getVideoPluginRect();
 	} else if ((TV.platform.isLG || TV.platform.isWebOs) && !this.el) {
 		if (!TV.PlayerWrapper.video_el) {
 			TV.PlayerWrapper.video_el = document.createElement('object');
@@ -216,6 +219,24 @@ TV.PlayerWrapper.prototype.attachCallbacks = function() {
 	}
 };
 
+TV.PlayerWrapper.prototype._getVideoPluginRect = function() {
+	var window_plugin = TV.el('pluginWindow'),
+		rect;
+
+	if (window_plugin.GetScreenRect && window_plugin.GetScreenRect()) {
+		rect = window_plugin.GetScreenRect().split('/');
+		this.video_window_w = parseInt(rect[2]);
+		this.video_window_h = parseInt(rect[3]);
+	} else if (TV.platform.isEmulator) { // emulator возвращает пустую строку в GetScreenRect
+		this.video_window_w = '960';
+		this.video_window_h = '540';
+	} else {
+		rect = TV.getRect('body');
+		this.video_window_w = rect.width;
+		this.video_window_h = rect.height;
+	}
+};
+
 TV.PlayerWrapper.prototype._getUrl = function() {
 	if (TV.platform.isSamsung) {
 		var url = this.url;
@@ -233,13 +254,16 @@ TV.PlayerWrapper.prototype._getUrl = function() {
 
 TV.PlayerWrapper.prototype.setDisplayArea = function(left, top, width, height) {
 	if (TV.platform.isSamsung) {
-		this.el.SetDisplayArea(left, top, width, height);
+		var body_rect = TV.getRect('body');
+		this.el.SetDisplayArea(this.video_window_w * left/body_rect.width, this.video_window_h * top/body_rect.height, this.video_window_w * width/body_rect.width, this.video_window_h * height/body_rect.height);
 	} else {
 		TV.show(this.el);
 		this.el.style.left = left+'px';
 		this.el.style.top = top+'px';
 		this.el.style.width = width+'px';
 		this.el.style.height = height+'px';
+		this.el.style.position = 'absolute';
+		this.el.style.zIndex = '1';
 		TV.log('setDisplayArea', this.el.style.left, this.el.style.top, this.el.style.width, this.el.style.height);
 	}
 };

@@ -1,14 +1,22 @@
 TVComponents.Slider = function(el, adjacent_buttons, parent, class_name) {
 	TVComponent.call(this, el, adjacent_buttons, parent, class_name);
-	this.count = this.attributes['count'] * 1;
-	this.dynamic = this.attributes['dynamic'] ? true : false;
-	this.direction = this.attributes['direction'];
-	this.is_vertical = this.direction == 'vertical';
-	this.is_horizontal = !this.is_vertical;
-	this.nav_buttons = this.attributes['nav_buttons'] ? true : false;
+	this.count = this.attributes['count'] * 1;                                     // количество отображаемых элементов
+	this.not_use_positions = this.attributes['not_use_positions'] ? true : false;  // не использовать позиционирование для элементов
+	this.start_offset = this.attributes['start_offset'] * 1 || 0;                  // на столько смещать вправо первый элемент данных
+	this.direction = this.attributes['direction'];                                 // направление слайдера, по-умолчанию горизонтальное
+	this.dynamic = this.attributes['dynamic'] ? true : false;                      // рендерить только видимые элементы, создавая остальные при движении по слайдеру
+	this.loop = this.attributes['loop'] ? true : false;                            // зациклить слайдер, автоматом ставится и dynamic = true
+	this.nav_buttons = this.attributes['nav_buttons'] ? true : false;              // показывать ли кнопки для управления мышкой
+	this.scrollbar = this.attributes['no_scrollbar'] ? false : true;               // показывать ли скролбар
     this.use_none = this.attributes['none'] ? true : false;
-    this.movie_debounce = this.attributes['movie_debounce'] * 1; // движение не чаще чем раз в movie_debounce мс
-
+    this.movie_debounce = this.attributes['movie_debounce'] * 1 || null;           // движение не чаще чем раз в movie_debounce мс
+    
+    if (this.loop) {
+    	this.dynamic = true;
+    	this.scrollbar = false;
+    }
+    this.is_vertical = this.direction == 'vertical';
+	this.is_horizontal = !this.is_vertical;
 	if (this.is_horizontal) {
 		this.first_side = 'left';
 		this.last_side = 'right';
@@ -18,46 +26,42 @@ TVComponents.Slider = function(el, adjacent_buttons, parent, class_name) {
 	}
 	this.data = null;
 	this.movie_on_all = false;
-	this.start_position = 0;       // номер певого элемента отображаемого сейчас в слайдере
-	this.first_btn_id = null;      // первая кнопка
-	this.last_btn_id = null;       // последняя кнопка
-	this.first_el_pos = null;      // граница первого элемента (левая граница для is_horizontal, верхняя для is_vertical)
-	this.last_el_pos = null;       // граница последнего элемента (правая граница для is_horizontal, нижняя для is_vertical)
-	this.container_el = null;      // элемент-контейнер для кнопок
-	this.container_move = true;    // двигать контейнер при при листании
-	this.start_for_dynamic = 0;    // номер элемента данных с котрого начинается динамический слайдер
-	this.scrollbar = true;         // показывать ли скролбар
+	this.start_position = 0;                        // номер певого элемента отображаемого сейчас в слайдере
+	this.first_btn_id = null;                       // первая кнопка
+	this.last_btn_id = null;                        // последняя кнопка
+	this.first_el_pos = null;                       // граница первого элемента (левая граница для is_horizontal, верхняя для is_vertical)
+	this.last_el_pos = null;                        // граница последнего элемента (правая граница для is_horizontal, нижняя для is_vertical)
+	this.container_el = null;                       // элемент-контейнер для кнопок
+	this.container_move = true;                     // двигать контейнер при при листании
 };
 TVComponents.Slider._buttons_counter = 1;
 TVComponents.Slider.prototype = Object.create(TVComponent.prototype);
 
 TVComponents.Slider.prototype.onready = function() {
 	if (!this.data) return;
-	this.first_btn_id = this.last_btn_id = this.first_el_pos = this.last_el_pos = null;
-	this.start_position = 0;
 	this.container_el = TV.el('[data-type="slider_container"]', this.el);
 	TV.setHTML(this.container_el, '');
-
-    if (this.data.length == 0 && this.use_none) {
-        this._addNone();
-    }
-
-	if (this.data.length == 0) return;
+	if (this.data.length == 0) {
+		if (this.use_none) this._addNone();
+		return;
+	}
+	
+	this.first_btn_id = this.last_btn_id = this.first_el_pos = this.last_el_pos = null;
+	this.start_position = 0;
 
 	// ренедрим элементы-кнопки
-	var max_size = this.count + this.start_for_dynamic;
-	if (!this.dynamic && this.data.length < max_size) max_size = this.data.length;
-	var start = this.dynamic ? this.start_for_dynamic - 1 : 0;
-	var finish = this.dynamic ? this.count + this.start_for_dynamic : this.data.length - 1;
+	var start = this.dynamic ? -this.start_offset - 1 : 0;
+	var finish = this.dynamic ? this.count - this.start_offset : this.data.length - 1;
 	var start_btn = this.dynamic ? start+1 : start;
 	var finish_btn = this.dynamic ? finish-1 : (this.data.length < this.count ? finish : this.count - 1);
 	var curr = start;
+	var flag_first = false;
 	while (curr <= finish) {
 		var item = this._getItem(curr);
 		var el = this._addElement(item, false, curr >= start_btn && curr <= finish_btn);
 		var btn = null;
-		if (curr >= start_btn && curr <= finish_btn) btn = this._makeBtn(el); 
-		if (curr == start_btn) {
+		if (curr >= start_btn && curr <= finish_btn && item) btn = this._makeBtn(el); 
+		if (curr >= start_btn && item && !flag_first) {
 			this.enable();
 			this.buttons._start_btn = btn;
 			// если hover-а у adjacent_buttons нет, но сладйер start="true", и parent-а нет, или он активный
@@ -67,6 +71,7 @@ TVComponents.Slider.prototype.onready = function() {
 			} 
 			// еслик компонент активен - на стартовую кнопку устанавливаем курсор
 			if (this.isHover()) this.buttons._start_btn.onmouseover();
+			flag_first = true;
 		}
 		curr += 1;
 	}
@@ -74,6 +79,7 @@ TVComponents.Slider.prototype.onready = function() {
 	// отрисовываем скрол
 	this._initScrollbarButtons();
 	this.setScrollbar();
+	this.updateNavButtons();
 };
 
 // добавить пустой html-элемент
@@ -96,15 +102,15 @@ TVComponents.Slider.prototype._addElement = function(item, is_first) {
 	if (this.attributes.item_template && TV.app.ejs[this.attributes.item_template]) ejs_path = this.attributes.item_template;
 	if (!TV.app.ejs[ejs_path]) throw 'Not defined template ' + ejs_path + ' for component ' + this.id;
 	var html = TV.app.ejs['component#Slider#item']({
-		btn_id: this.id + '_' + item._index,
-		item: item,
-		item_html: TV.app.ejs[ejs_path]({item : item})
+		btn_id: this.id + '_' + (item ? item._index : 'none'),
+		item: item ? item : {id: 'none'},
+		item_html: item ? TV.app.ejs[ejs_path]({item : item}) : ''
 	});
 	var el = TV.createElement(html);
 	is_first ? this.container_el.insertBefore(el, this.container_el.firstElementChild) : this.container_el.appendChild(el);
 
 	// проставляем позицию
-	if (this.dynamic && this.container_move) {
+	if (!this.not_use_positions && this.container_move) {
 		var size = TV.getSize(el);
 		if (this.first_el_pos === null || this.last_el_pos === null) {
 			is_first = true;
@@ -132,15 +138,15 @@ TVComponents.Slider.prototype._addElement = function(item, is_first) {
 TVComponents.Slider.prototype._makeComponents = function(root_el, root_btn) {
 	// инициализируем все найденные компоненты
 	var components = TV.find('[data-type="component"]', root_el);
-	for (var i=0; i < components.length; i++) {
-		var el = components[i];
+	components.map(function(el) {
 		if (!el._attributes.id) throw 'Not defined id for component '+(el.outerHTML||el.innerHTML);
 		var cl_name = el._attributes['class'];
 		var cl = cl_name ? (TVComponents[cl_name] || window[cl_name]) : null;
 		if (cl && typeof(cl) != 'function') throw 'Not defined TVComponents.'+cl_name+' or '+cl_name+' class for component '+el._attributes.id;
-		var comp = cl ? new cl(el, root_btn.buttons, this, cl_name) : new TVComponent(el, root_btn.buttons, this);
+		return cl ? new cl(el, root_btn.buttons, this, cl_name) : new TVComponent(el, root_btn.buttons, this);
+	}.bind(this)).map(function(comp) {
 		comp.init();
-	}
+	});
 	
 	var first_btn;
 	for (var id in root_btn.buttons) {
@@ -157,10 +163,11 @@ TVComponents.Slider.prototype._makeComponents = function(root_el, root_btn) {
 
 // создать кнопку на существуещем html-элементе следующим за текущей последней кнопкой
 TVComponents.Slider.prototype._makeBtn = function(el, is_first) {
-	el.setAttribute('data-type', 'button');
+	el.setAttribute('data-type', 'component');
 	var btn = new TVComponent(el, this.buttons, this);
+	btn._is_slider_item = true;
 	var on_bound = false;
-	if (!this.dynamic) {
+	if (!this.loop) {
 		// выход за пределы слайдера на конечных кнопках
 		if (is_first && this.start_position == 0) on_bound = true;
 		if (!is_first && this.start_position + this.count >= this.data.length) on_bound = true;
@@ -190,7 +197,7 @@ TVComponents.Slider.prototype._makeBtn = function(el, is_first) {
 	}
 	this.btnAttachCallbacks(btn);
 	
-	// если внутри кнопки-компонента есть жругие компоненты - инициализируем их
+	// если внутри кнопки-компонента есть другие компоненты - инициализируем их
 	if (!this._makeComponents(el, btn)) {
 		// если компонент нет - клик должен раьботать как у button-а
 		btn.el.onclick = btn.onmouseclick.bind(btn);
@@ -204,10 +211,11 @@ TVComponents.Slider.prototype._makeBtn = function(el, is_first) {
 TVComponents.Slider.prototype._getItem = function(index) {
 	var item = {};
 	var k = index;
-	if (this.dynamic) {
+	if (this.loop) {
 		if (k < 0) k = k + this.data.length * Math.ceil(-k / this.data.length);
 		if (k >= this.data.length) k = k % this.data.length;
 	}
+	if (!this.data[k]) return null;
 	for (var i in this.data[k])	item[i] = this.data[k][i];
 	item._index = TVComponents.Slider._buttons_counter;
 	TVComponents.Slider._buttons_counter += 1;
@@ -253,42 +261,53 @@ TVComponents.Slider.prototype.moveTo = function(el) {
 	this.container_el.style.webkitTransition = "all 0.3s ease-in-out";
 };
 
+// is_first - движение влева/вверх
 TVComponents.Slider.prototype._movie = function(is_first) {
 	// слишком частое нажатие 
 	if (this.movie_debounce) {
 		if (this._movie_time && this._movie_time + this.movie_debounce > Date.now()) return false;
 		this._movie_time = Date.now();
 	}
-	if (!this.dynamic && is_first && this.start_position <= 0) return;
-	if (!this.dynamic && !is_first && this.start_position + this.count >= this.data.length) return;
+	if (!this.loop && is_first && this.start_position <= 0) return;
+	if (!this.loop && !is_first && this.start_position + this.count >= this.data.length + this.start_offset * 2) return; // хак, this.start_offset используется только в ClassSlider-е и в нем он равен количеству элементов от середины до конца 
 	this.start_position += is_first ? -1 : 1;
-
-	// удаляем вышедшую за видимые границы кнопку
+	
+	// количество кнопок
+	var buttons_count = 0;
+	for (var i in this.buttons) {
+		if (this.buttons[i]._is_slider_item) buttons_count += 1;
+	}
+	
+	// крайняя от направления движения кнопка
 	var btn = is_first ? this.buttons[this.last_btn_id] : this.buttons[this.first_btn_id];
 	var curr_el = btn.el;
-	if (is_first) {
-		this.last_btn_id = btn[this.first_side];
-		if (this.buttons[this.last_btn_id]) this.buttons[this.last_btn_id][this.last_side] = null;
-	} else {
-		this.first_btn_id = btn[this.last_side];
-		if (this.buttons[this.first_btn_id]) this.buttons[this.first_btn_id][this.first_side] = null;
+	
+	// удаляем вышедшую за видимые границы кнопку (только если в слайдере столько же кнопок солько элементов)
+	if (buttons_count == this.count || is_first && buttons_count == this.count - 1) {
+		if (is_first) {
+			this.last_btn_id = btn[this.first_side];
+			if (this.buttons[this.last_btn_id]) this.buttons[this.last_btn_id][this.last_side] = null;
+		} else {
+			this.first_btn_id = btn[this.last_side];
+			if (this.buttons[this.first_btn_id]) this.buttons[this.first_btn_id][this.first_side] = null;
+		}
+		if (!is_first && this.last_btn_id == btn.id || is_first && this.first_btn_id == btn.id) {
+			// сработает когда в слайдере вообще 1 активный элемент (кнопка)
+			this.first_btn_id = null;
+			this.last_btn_id = null;
+			btn.onmouseout();
+		}
+		btn.el.removeAttribute('data-type');
+		btn.remove();
 	}
-	if (!is_first && this.last_btn_id == btn.id || is_first && this.first_btn_id == btn.id) {
-		// сработает когда в слайдере вообще 1 активный элемент (кнопка)
-		this.first_btn_id = null;
-		this.last_btn_id = null;
-		btn.onmouseout();
-	}
-	btn.el.removeAttribute('data-type');
-	btn.remove();
 	
 	// обновляем вошедший элемент до кнопки
 	var elem = is_first ? this.buttons[this.first_btn_id] : this.buttons[this.last_btn_id];
 	elem = elem ? elem.el : curr_el; // сработает когда в слайдере вообще 1 активный элемент (кнопка)
-	elem = is_first ? elem.previousElementSibling : elem.nextElementSibling; 
-
+	elem = is_first ? elem.previousElementSibling : elem.nextElementSibling;
 	var size = TV.getSize(elem);
-	this._makeBtn(elem, is_first);
+	if (elem.innerHTML.replace(/\s+/, '')) this._makeBtn(elem, is_first); // только если в html-е не пустой блок
+	
 
 	if (this.dynamic) {
 		// удаляем крайний элемент
@@ -301,8 +320,19 @@ TVComponents.Slider.prototype._movie = function(is_first) {
 			el = this.container_el.firstElementChild;
 			this.first_el_pos = parseInt(this.is_horizontal ? el.style.left: el.style.top);
 		}
+		// если елемент связан с кнопкой - удаляем кнопку
+		btn = this.findButtonByEl(el);
+		if (btn) {
+			if (this.last_btn_id == btn.id) {
+				this.last_btn_id = btn[this.first_side];
+			}
+			if (this.first_btn_id == btn.id) {
+				this.first_btn_id = btn[this.last_side];
+			}
+			btn.remove();
+		}
 		// добавляем новый элемент
-		var item = this._getItem(is_first ? this.start_position - 1 + this.start_for_dynamic : this.start_position + this.count  + this.start_for_dynamic);
+		var item = this._getItem(is_first ? this.start_position - 1 - this.start_offset : this.start_position + this.count - this.start_offset);
 		this._addElement(item, is_first);
 	}
 
@@ -320,6 +350,8 @@ TVComponents.Slider.prototype._movie = function(is_first) {
 			this.container_el.style.top = container_top + 'px';
 		}
 	}
+	
+	this.updateNavButtons();
 };
 
 TVComponents.Slider.prototype._initScrollbarButtons = function() {
@@ -327,9 +359,18 @@ TVComponents.Slider.prototype._initScrollbarButtons = function() {
 		var el = TV.el(selector, this.el);
 		if (el) {
 			el.setAttribute('data-type', 'button');
+			el.setAttribute('data-id', this.id+'_'+selector.replace(/.*"slider_(.*?)".*/, '$1'));
 			new TVButton(el, this.buttons, this).onclick = function() {
 				if (this._movie(is_first) === false) return;
 				this.setScrollbar();
+				var side;
+				if (is_first) {
+					side = this.is_horizontal ? 'left' : 'up';
+				} else {
+					side = this.is_horizontal ? 'right' : 'down';
+				}
+				TVComponent.prototype.oncursor.call(this, side);
+				this.buttons._hover_btn && TV.removeClass(this.buttons._hover_btn.el, TVButton.hover_class);
 			}.bind(this);
 		}
 	}.bind(this);
@@ -340,7 +381,7 @@ TVComponents.Slider.prototype._initScrollbarButtons = function() {
 };
 
 TVComponents.Slider.prototype.setScrollbar = function() {
-	if (this.dynamic || !this.data || this.data.length <= this.count || this.count < 2 || !this.scrollbar) {
+	if (!this.scrollbar || !this.data || this.data.length <= this.count || this.count < 2 || !this.scrollbar) {
 		TV.hide('[data-type="slider-navigate"]', this.el);
 	} else {
 		TV.show('[data-type="slider-navigate"]', this.el);
@@ -355,6 +396,28 @@ TVComponents.Slider.prototype.setScrollbar = function() {
 		} else {
 			scrollbar.style.width = size.toFixed(2)+'%';
 			scrollbar.style.left = pos.toFixed(2)+'%';
+		}
+	}
+};
+
+// обновляем состояние кнопок листания
+TVComponents.Slider.prototype.updateNavButtons = function() {
+	if (!this.loop) {
+		// достигнут левый край
+		if (this.start_position <= 0) {
+			this.buttons[this.id+'_nav_prev'] && this.buttons[this.id+'_nav_prev'].disable();
+			this.buttons[this.id+'_sc_prev'] && this.buttons[this.id+'_sc_prev'].disable();
+		} else {
+			this.buttons[this.id+'_nav_prev'] && this.buttons[this.id+'_nav_prev'].enable();
+			this.buttons[this.id+'_sc_prev'] && this.buttons[this.id+'_sc_prev'].enable();
+		}
+		// достигнут правый край
+		if (this.start_position + this.count >= this.data.length + this.start_offset * 2) {
+			this.buttons[this.id+'_nav_next'] && this.buttons[this.id+'_nav_next'].disable();
+			this.buttons[this.id+'_sc_next'] && this.buttons[this.id+'_sc_next'].disable();
+		} else {
+			this.buttons[this.id+'_nav_next'] && this.buttons[this.id+'_nav_next'].enable();
+			this.buttons[this.id+'_sc_next'] && this.buttons[this.id+'_sc_next'].enable();
 		}
 	}
 };

@@ -14,15 +14,16 @@ TVComponents.Player = function(el, adjacent_buttons, parent, class_name) {
 	this.duration = null;	   // длительность видео в секундах
 	this.onstatechange = null; // колбэк изменения состояния проигрывания
 	
-	this.autostart = this.attributes['autostart'];
+	this.autostart = this.attributes['autostart'] && this.attributes['autostart'] != 'false';
 	this.seek_show_time = this.attributes['seek_show_time'] ? this.attributes['seek_show_time']*1 : 1000;  // время отображения перемотки
 	this.inactive_time = this.attributes['inactive_time'] ? this.attributes['inactive_time']*1 : 3000;     // время бездействия до скрытия панели
 	this.inactive_without_action = this.attributes['inactive_without_action'] && this.attributes['inactive_without_action'] != "false"; // обрабатывать кнопки и при скрытой панели
+	this.hide_panel = this.attributes['hide_panel'];
 	
 	this._stop_after_buffering = false;	// вызывать stop после буферизации
 	this._show_seek = null;             // признак отображения перемотки (время начала показа)
 	this._inactive_timer = null;        // таймер до скрытия панели
-	this._hidden_panel = false;         // признак скрытия панели
+	this._hidden_panel = false;   		// признак скрытия панели
 	this.onend = null;					// callback по завершении проигрывания
 	this._where_to_seek = null;			// время для перемотки по клавишам лево-право
 };
@@ -62,9 +63,14 @@ TVComponents.Player.prototype.onready = function() {
 	this.video.onbuffering = this.onvideobuffering.bind(this);
 	this.video.onerror = this.onvideoerror.bind(this);
 	
+	// TODO переделать: act_btn, равный close остается с предыдущей страницы с плеером
+	this.buttons._act_btn = null;
+	
 	// устанавливаем плеер на нужную позицию и размер
-	var rect = TV.getRect(this.el);
-	this.video.setDisplayArea(0, 0, rect.width, rect.height);
+	var rect = TV.getRect(this.el),
+		wrap = TV.getRect(TV.el('body'));
+	this.video.setDisplayArea(rect.left - wrap.left, rect.top, rect.width, rect.height);
+	
 	// стартуем
 	this.video.url = this.data.url;
 	if (this.autostart) setTimeout(function() {
@@ -165,9 +171,14 @@ TVComponents.Player.prototype.onAnyKey = function(key_code) {
 	} else if (key_code == TV.keys.ff) {
 		if (this.state == 'play') this.btnProcessSeek(-1);
 	} else if (key_code == TV.keys.return) {
-		if (hidden_panel) return false;
-		this.buttons.close.onmouseclick();
-		return false;
+		if (this.hide_panel) {
+			return;
+		} else {
+			if (hidden_panel) return false;
+			this.buttons.close.onmouseclick();
+			return false;
+		}
+		
 	}
 	if (hidden_panel && !this.inactive_without_action) return false;
 };
@@ -201,10 +212,7 @@ TVComponents.Player.prototype.btnProcessSeek = function(direction) {
 	TV.log('btnProcessSeek', direction, step, this._seek_step, this._where_to_seek);
 	this.stopInactive();
 	this.showSeek(this._where_to_seek);
-	/*setTimeout(function() {
-		TV.setHTML('[data-id="player_control_time_cur"]', this.formatTime(this._where_to_seek), this.el);
-	}.bind(this), 100);
-	*/
+	TV.setHTML('[data-id="player_control_time_cur"]', this.formatTime(this._where_to_seek), this.el);
 	
 	if (this._seek_timer) clearTimeout(this._seek_timer);
 	this._seek_timer = setTimeout(function() {

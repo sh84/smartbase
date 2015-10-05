@@ -118,6 +118,17 @@ TV.getSize = function(selector, parent) {
 	};
 };
 
+// проверяет видим ли полностью элемент на экране (может выступать за любую из сторон не более чем на delta px)
+TV.isFullVisible = function(el, delta) {
+	delta = delta || 0;
+	var body_rect = TV.getRect(document.body);
+	var el_rect = TV.getRect(el);
+	return el_rect.left > body_rect.left - delta && 
+		el_rect.left + el_rect.width < body_rect.left + body_rect.width + delta &&
+		el_rect.top > body_rect.top - delta &&
+		el_rect.top + el_rect.height < body_rect.top + body_rect.height + delta;
+};
+
 // находит элементы по селектору, для каждого элемента возвращает так же его data-* атрибуты в свойстве _attributes
 TV.find = function(selector, parent, without_attributes) {
 	var result = [];

@@ -13,9 +13,9 @@ TVComponents.GridSlider = function(el, adjacent_buttons, parent, class_name) {
 	this.is_vertical = true;
 	this.is_horizontal = false;
 	this.dynamic = false;
+	this.loop = false;
 	this.container_move = false;
 	this.template = 'Slider';
-	this.scrollbar = this.attributes['scrollbar'] ? true : false;
 };
 TVComponents.GridSlider.prototype = Object.create(TVComponents.Slider.prototype);
 
@@ -68,10 +68,12 @@ TVComponents.GridSlider.prototype._movie = function(is_first) {
 
 		this.buttons._hover_btn[is_first ? 'up' : 'down'] = btn.id;
 	}
+	
+	this.updateNavButtons();
 };
 
 TVComponents.GridSlider.prototype._setButtons = function() {
-	var els = TV.find('[data-type="button"]', this.container_el);
+	var els = TV.find('* > [data-type="component"]', this.container_el);
 	if (els.length == 0) return;
 	var x = 0, y = 0;
 	for (var i=0; i < els.length; i++) {
