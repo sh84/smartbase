@@ -276,16 +276,24 @@ TV.prototype.onKey = function(event) {
 	// пока идет загрузка - не обрабатываем
 	if (this.load_data_callback) return;
 	var key_code = event.keyCode;
+	// глобальный обработчик приложения
+	if (this.onAnyKey) {
+		if (this.onAnyKey(key_code) === false) {
+		    if (key_code == TV.keys.return && event.preventDefault) event.preventDefault();
+		    return;
+		}
+	}
+	var page_or_popup = this.curr_popup || this.curr_page;
     // глобальный обработчик страницы
-	if (this.curr_page.onAnyKey) {
-		if (this.curr_page.onAnyKey(key_code) === false) {
+	if (page_or_popup.onAnyKey) {
+		if (page_or_popup.onAnyKey(key_code) === false) {
 		    if (key_code == TV.keys.return && event.preventDefault) event.preventDefault();
 		    return;
 		}
 	}
     // глобальный обработчик компонента
-	for (var i in this.curr_page.buttons) {
-		var btn = this.curr_page.buttons[i];
+	for (var i in page_or_popup.buttons) {
+		var btn = page_or_popup.buttons[i];
 		if (btn.onAnyKey) {
 			if (btn.onAnyKey(key_code) === false) {
 			    if (key_code == TV.keys.return && event.preventDefault) event.preventDefault();
