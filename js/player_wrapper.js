@@ -336,6 +336,7 @@ TV.PlayerWrapper.prototype.seek = function(seek_time) {
 	if (TV.platform.isSamsung) {
 		var val = seek_time - this._curr_time;
 		if (val > 0) {
+			if (seek_time >= this.el.GetDuration()) val -= 1000;
 			this.el.JumpForward(val/1000);
 		} else {
 			this.el.JumpBackward(Math.abs(val/1000));
