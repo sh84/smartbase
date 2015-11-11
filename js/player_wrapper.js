@@ -221,20 +221,23 @@ TV.PlayerWrapper.prototype.attachCallbacks = function() {
 
 TV.PlayerWrapper.prototype._getVideoPluginRect = function() {
 	var window_plugin = TV.el('pluginWindow'),
+		delimiter,
 		rect;
 
-	if (window_plugin.GetScreenRect && window_plugin.GetScreenRect()) {
-		rect = window_plugin.GetScreenRect().split('/');
-		this.video_window_w = parseInt(rect[2]);
-		this.video_window_h = parseInt(rect[3]);
-	} else if (TV.platform.isEmulator) { // emulator возвращает пустую строку в GetScreenRect
-		this.video_window_w = '960';
-		this.video_window_h = '540';
+	if (window_plugin.GetScreenRect) {
+		rect = window_plugin.GetScreenRect();
+		delimiter = /\//.test(rect) ? '/' : ',';
+		rect = rect.split(delimiter); // Tizen returns string '..., w: <w>, h: <h>', Orsay - string '<top>/<left>/<w>/<h>'
+		this.video_window_w = rect[2] && parseInt(rect[2].replace(/^\D+/g, '')) || 0; 
+		this.video_window_h = rect[3] && parseInt(rect[3].replace(/^\D+/g, '')) || 0;
 	} else {
 		rect = TV.getRect('body');
 		this.video_window_w = rect.width;
 		this.video_window_h = rect.height;
 	}
+	
+	if (this.video_window_w < 960) this.video_window_w = 960; // GetScreenRect may return wrong size on 2012 Orsay  
+	if (this.video_window_h < 540) this.video_window_h = 540;
 };
 
 TV.PlayerWrapper.prototype._getUrl = function() {

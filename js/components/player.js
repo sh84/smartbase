@@ -21,6 +21,7 @@ TVComponents.Player = function(el, adjacent_buttons, parent, class_name) {
 	this.hide_panel = this.attributes['hide_panel'];
 	
 	this._stop_after_buffering = false;	// вызывать stop после буферизации
+	this._play_after_buffering = false;	// вызывать play после буферизации
 	this._show_seek = null;             // признак отображения перемотки (время начала показа)
 	this._inactive_timer = null;        // таймер до скрытия панели
 	this._hidden_panel = false;   		// признак скрытия панели
@@ -167,9 +168,9 @@ TVComponents.Player.prototype.onAnyKey = function(key_code) {
 	} else if (key_code == TV.keys.stop) {
 		this.buttons.stop.onmouseclick();
 	} else if (key_code == TV.keys.rw) {
-		if (this.state == 'play') this.btnProcessSeek(1);
-	} else if (key_code == TV.keys.ff) {
 		if (this.state == 'play') this.btnProcessSeek(-1);
+	} else if (key_code == TV.keys.ff) {
+		if (this.state == 'play') this.btnProcessSeek(1);
 	} else if (key_code == TV.keys.return) {
 		if (this.hide_panel) {
 			return;
@@ -185,6 +186,7 @@ TVComponents.Player.prototype.onAnyKey = function(key_code) {
 
 TVComponents.Player.prototype.btnProcessSeek = function(direction) {
 	if (this._where_to_seek === null && this.state != 'play') return;
+	TV.show('[data-id="player_loader"]', this.el);
 	if (this.state == 'play') this.pause();
 	if (this._where_to_seek === null) this._where_to_seek = this.curr_time;
 	if (this._seek_direction != direction) {
@@ -224,6 +226,7 @@ TVComponents.Player.prototype.btnProcessSeek = function(direction) {
 		this._seek_direction = null;
 		this._seek_step = null;
 		this._seek_timer = null;
+		TV.hide('[data-id="player_loader"]', this.el);
 	}.bind(this), 700);
 };
 
@@ -250,7 +253,10 @@ TVComponents.Player.prototype.onvideobuffering = function(val) {
 			this.buffering = false;
 			TV.hide('[data-id="player_loader"]', this.el);
 			TV.removeClass(this.el, 'player_buffering');
-			if (this._stop_after_buffering) {
+			if (this._play_after_buffering) {
+				this._play_after_buffering = false;
+				this.play();
+			} else if (this._stop_after_buffering){
 				this._stop_after_buffering = false;
 				this.stop();
 			}
@@ -327,7 +333,10 @@ TVComponents.Player.prototype.onvideoerror = function(error) {
 TVComponents.Player.prototype.play = function() {
 	TV.log('play', this.state, this.data.url);
 	if (this._where_to_seek !== null) this._where_to_seek = null;
-	if (this.buffering) return;
+	if (this.buffering) {
+		this._play_after_buffering = true;
+		return;
+	}
 	TV.removeClass(this.buttons.play.el, TVComponents.Player.btn_play_class);
 	TV.addClass(this.buttons.play.el, TVComponents.Player.btn_pause_class);
 	if (this.state == 'stop') {
@@ -391,6 +400,7 @@ TVComponents.Player.prototype.seek = function(seek_time, show) {
 };
 
 TVComponents.Player.prototype.showSeek = function(seek_time) {
+	TV.show('[data-id="player_loader"]', this.el);
 	this._show_seek = new Date()/1;
 	var el_seek = TV.el('[data-id="player_control_strip_seek"]', this.el);
 	var el_time = TV.el('[data-id="player_control_strip_time"]', this.el);
@@ -415,6 +425,7 @@ TVComponents.Player.prototype.hideSeek = function(force) {
 	if (this._show_seek && new Date()/1 - this._show_seek > this.seek_show_time || force) {
 		TV.hide('[data-id="player_control_strip_seek"]', this.el);
 		TV.hide('[data-id="player_control_strip_time"]', this.el);
+		TV.hide('[data-id="player_loader"]', this.el);
 		this._show_seek = null;
 	}
 };
