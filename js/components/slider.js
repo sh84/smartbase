@@ -6,15 +6,13 @@ TVComponents.Slider = function(el, adjacent_buttons, parent, class_name) {
 	this.direction = this.attributes['direction'];                                 // направление слайдера, по-умолчанию горизонтальное
 	this.dynamic = this.attributes['dynamic'] ? true : false;                      // рендерить только видимые элементы, создавая остальные при движении по слайдеру
 	this.loop = this.attributes['loop'] ? true : false;                            // зациклить слайдер, автоматом ставится и dynamic = true
+	this.loop_start_count = this.attributes['loop_start_count'] * 1 || 0;          // количество элементов, при которых зацикливать слайдер
+	this.move_to_center = this.attributes['move_to_center'] ? true : false;  	   // сдвинуть к центральному элементу данных
 	this.nav_buttons = this.attributes['nav_buttons'] ? true : false;              // показывать ли кнопки для управления мышкой
 	this.scrollbar = this.attributes['no_scrollbar'] ? false : true;               // показывать ли скролбар
     this.use_none = this.attributes['none'] ? true : false;
     this.movie_debounce = this.attributes['movie_debounce'] * 1 || null;           // движение не чаще чем раз в movie_debounce мс
     
-    if (this.loop) {
-    	this.dynamic = true;
-    	this.scrollbar = false;
-    }
     this.is_vertical = this.direction == 'vertical';
 	this.is_horizontal = !this.is_vertical;
 	if (this.is_horizontal) {
@@ -48,6 +46,13 @@ TVComponents.Slider.prototype.onready = function() {
 	
 	this.first_btn_id = this.last_btn_id = this.first_el_pos = this.last_el_pos = null;
 	this.start_position = 0;
+	
+	if (this.loop && this.data.length >= this.loop_start_count) {
+		this.dynamic = true;
+		this.scrollbar = false;
+	} else {
+		this.loop = false;
+	}
 
 	// ренедрим элементы-кнопки
 	var start = this.dynamic ? -this.start_offset - 1 : 0;
@@ -80,6 +85,11 @@ TVComponents.Slider.prototype.onready = function() {
 	this._initScrollbarButtons();
 	this.setScrollbar();
 	this.updateNavButtons();
+	
+	// прокручиваем к центральному элементу, если передан move_to_center = true
+	if (!this.loop && this.move_to_center) {
+		this.moveToCenter();
+	}
 };
 
 // добавить пустой html-элемент
@@ -255,7 +265,7 @@ TVComponents.Slider.prototype.moveTo = function(el) {
 	}
 	// листаем, пока el не станет первым
 	for (var i = 0; i<=this.data.length-1; i++) {
-		if (this.buttons[this.first_btn_id].el != el && this.start_position + this.count < this.data.length) this._movie(false);
+		if (this.buttons[this.first_btn_id].el != el) this._movie(false);
 		else break;
 	}
 	this.setScrollbar();
@@ -270,9 +280,23 @@ TVComponents.Slider.prototype.moveTo = function(el) {
 	this.container_el.style.webkitTransition = "all 0.3s ease-in-out";
 };
 
+TVComponents.Slider.prototype.moveToCenter = function() {
+	if (this.data.length < 2) return;
+	var center_ind = Math.floor(this.data.length/2) - 1,
+		curr_ind = 0;
+		
+	for (var btn in this.buttons) {
+		if (curr_ind == center_ind) {
+			this.moveTo(btn.el);
+			break;
+		}
+		curr_ind++;
+	}
+};
+
 // is_first - движение влево/вверх
 TVComponents.Slider.prototype._movie = function(is_first) {
-	// слишком частое нажатие 
+	// слишком частое нажатие
 	if (this.movie_debounce) {
 		if (this._movie_time && this._movie_time + this.movie_debounce > Date.now()) return false;
 		this._movie_time = Date.now();
