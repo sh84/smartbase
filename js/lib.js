@@ -40,6 +40,10 @@ if (!Function.prototype.bind) {
 	TV.platform.isPhilips = p == 'philips';
 	TV.platform.isEmulator = em;
 
+	// Для Tizen платформ выставляем и isSamsung и isTizen
+	if (navigator.userAgent.match(/Tizen/i)) p = 'tizen';
+	TV.platform.isTizen = p == 'tizen';
+
 })();
 
 // ищет элемент по id или css выражению

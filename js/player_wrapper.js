@@ -39,6 +39,9 @@ TV.PlayerWrapper = function(el) {
     this._trick_seek_position = 0;          // Куда на самом деле нужно перейти
     this._trick_seek_from = 0;              // Откуда переходим
     this._trick_seek_threshold = 5000;      // Допустимая ошибка перехода
+
+	this.dummy_start = null;               	// Заглушка. Стартовое время проигрывания у Tizen
+	this.has_seek = false;
 };
 TV.PlayerWrapper.server_seek = null;
 
@@ -48,6 +51,27 @@ TV.PlayerWrapper.prototype.attachCallbacks = function() {
 			this.onready && this.onready();
 		}.bind(this);
 		this.el.OnCurrentPlayTime = function(time) {
+
+			//TODO убрать заглушку
+    		if (TV.platform.isTizen) {
+				TV.log("time:", this.dummy_start, time);
+        		//TODO написать корректное условие, различающее live/vod
+				
+				// Первое срабатывание OnCurrentPlayTime
+        		if (this.dummy_start === null) {
+					// Был автосик, значит это vod
+					if (this.has_seek) {
+						this.dummy_start = 0;
+					} else {
+            			this.dummy_start = time;
+					}
+        		}
+				
+        		time -= this.dummy_start;
+        		// Добавим 2.5 секунды ко времени, чтобы vod смог дойти до конца 
+        		time += 2500;
+    		}	
+
 			this._curr_time = time;
 			this.onprogress && this.onprogress(time);
 		}.bind(this);
