@@ -52,15 +52,37 @@ TVButton.initAll = function(page, start_btn_id) {
 	TVButton._initButtons(page.buttons);
 
 	// ищем кнопки
-	var els = TV.find('[data-type="button"]', page instanceof TVPage ? null : page.el);
-	for (var i=0; i < els.length; i++) {
-		var el = els[i];
-		if (!el._attributes.id) throw 'Not defined id for button '+(el.outerHTML||el.innerHTML);
+	var buttons_els = TV.find('[data-type="button"]', page instanceof TVPage ? null : page.el);
+	
+	// ищем компоненты
+	var component_el, components_els = [], 
+		all_components_els = TV.find('[data-type="component"]', page instanceof TVPage ? null : page.el);
+	while (component_el = all_components_els.shift()) {
+		components_els.push(component_el);
+		// ещем компоненты в компонентах и исключаем их из общего списка
+		var els_in = TV.find('[data-type="component"]', component_el);
+		for (var i=0; i < els_in.length; i++) {
+			for (var k=0; k < all_components_els.length; k++) {
+				if (els_in[i] == all_components_els[k]) {
+					all_components_els.splice(k, 1);
+					break;
+				}
+			}
+		}
+		// ещем кнопки в компонентах и исключаем их из общего списка
+		els_in = TV.find('[data-type="button"]', component_el);
+		for (var i=0; i < els_in.length; i++) {
+			for (var k=0; k < buttons_els.length; k++) {
+				if (els_in[i] == buttons_els[k]) {
+					buttons_els.splice(k, 1);
+					break;
+				}
+			}
+		}
 	}
-
-	// инициализируем все найденные компоненты
-	var components = TV.find('[data-type="component"]', page instanceof TVPage ? null : page.el);
-	components.map(function(el) {
+	
+	// инициализируем компоненты
+	components_els.map(function(el) {
 		if (!el._attributes.id) throw 'Not defined id for component '+(el.outerHTML||el.innerHTML);
 		var cl_name = el._attributes['class'];
 		var cl = cl_name ? (TVComponents[cl_name] || window[cl_name]) : null;
@@ -74,21 +96,13 @@ TVButton.initAll = function(page, start_btn_id) {
 			start_btn_id_replaced = start_btn_id.replace('.'+comp_start_btn_id, '');
 		}
 		comp.init(comp_start_btn_id);
-		// из найденных кнопок исключаем кнопки компонентов
-		for (var btn_id in comp.buttons) {
-			for (var k in els) {
-				if (comp.buttons[btn_id].el == els[k]) {
-					els.splice(k, 1);
-					break;
-				}
-			}
-		}
 	}.bind(this));
 
-	// инициализируем все кнопки
-	for (var i=0; i < els.length; i++) {
-		new TVButton(els[i], page.buttons);
-	}
+	// инициализируем кнопки
+	buttons_els.map(function(el) {
+		if (!el._attributes.id) throw 'Not defined id for button '+(el.outerHTML||el.innerHTML);
+		new TVButton(el, page.buttons);
+	});
 
 	// проверяем что нет ссылок на несуществующие кнопки,
 	// ищем стартовую и активную кнопку

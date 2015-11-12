@@ -237,7 +237,7 @@ TVComponents.Player.prototype.onvideoready = function() {
 	if (this.duration == -1) {
 		
 	}
-	TV.log('onvideoready, set duration='+this.duration);
+	TV.log('onvideoready, set duration='+this.duration+', stream duration='+this.video.getDuration()/1000);
 
 	if (!this.data.seek) {
         TV.log('on onvideoready stateChange to', this.state);
@@ -270,7 +270,7 @@ TVComponents.Player.prototype.onvideobuffering = function(val) {
 
 // прогресс проигрывания
 TVComponents.Player.prototype.onvideoprogress = function(time) {
-	//TV.log('onvideoprogress', time);
+	TV.log('onvideoprogress', time);
 	if (this.buffering) this.onvideobuffering(100);
 	if (this._show_seek) this.hideSeek();
 	if (this.state == 'stop') return;
@@ -331,7 +331,7 @@ TVComponents.Player.prototype.onvideoerror = function(error) {
 };
 
 TVComponents.Player.prototype.play = function() {
-	TV.log('play', this.state, this.data.url);
+	TV.log('play', this.state, this.data.url, this.data.base_time);
 	if (this._where_to_seek !== null) this._where_to_seek = null;
 	if (this.buffering) {
 		this._play_after_buffering = true;

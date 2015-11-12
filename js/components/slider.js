@@ -136,6 +136,14 @@ TVComponents.Slider.prototype._addElement = function(item, is_first) {
 };
 
 TVComponents.Slider.prototype._makeComponents = function(root_el, root_btn) {
+	// инициализируем все найденные кнопки
+	var buttons = TV.find('[data-type="button"]', root_el);
+	for (var i=0; i < buttons.length; i++) {
+		var el = buttons[i];
+		if (!el._attributes.id) throw 'Not defined id for button '+(el.outerHTML||el.innerHTML);
+		new TVButton(el, root_btn.buttons, root_btn);
+	}
+	
 	// инициализируем все найденные компоненты
 	var components = TV.find('[data-type="component"]', root_el);
 	components.map(function(el) {
@@ -143,7 +151,7 @@ TVComponents.Slider.prototype._makeComponents = function(root_el, root_btn) {
 		var cl_name = el._attributes['class'];
 		var cl = cl_name ? (TVComponents[cl_name] || window[cl_name]) : null;
 		if (cl && typeof(cl) != 'function') throw 'Not defined TVComponents.'+cl_name+' or '+cl_name+' class for component '+el._attributes.id;
-		return cl ? new cl(el, root_btn.buttons, this, cl_name) : new TVComponent(el, root_btn.buttons, this);
+		return cl ? new cl(el, root_btn.buttons, root_btn, cl_name) : new TVComponent(el, root_btn.buttons, root_btn);
 	}.bind(this)).map(function(comp) {
 		comp.init();
 	});
@@ -261,7 +269,7 @@ TVComponents.Slider.prototype.moveTo = function(el) {
 	this.container_el.style.webkitTransition = "all 0.3s ease-in-out";
 };
 
-// is_first - движение влева/вверх
+// is_first - движение влево/вверх
 TVComponents.Slider.prototype._movie = function(is_first) {
 	// слишком частое нажатие 
 	if (this.movie_debounce) {

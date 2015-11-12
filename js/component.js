@@ -64,12 +64,24 @@ TVComponent.prototype.render = function(start_btn_id) {
 	TVButton._initButtons(this.buttons);
 	
 	// инициализируем все найденные кнопки внутри компонента
-	var els = TV.find('[data-type="button"]', this.el);
-	for (var i=0; i < els.length; i++) {
-		var el = els[i];
+	var buttons = TV.find('[data-type="button"]', this.el);
+	for (var i=0; i < buttons.length; i++) {
+		var el = buttons[i];
 		if (!el._attributes.id) throw 'Not defined id for button '+(el.outerHTML||el.innerHTML);
 		new TVButton(el, this.buttons, this);
 	}
+	
+	// инициализируем все компоненты внутри компонента
+	var components = TV.find('[data-type="component"]', this.el);
+	components.map(function(el) {
+		if (!el._attributes.id) throw 'Not defined id for component '+(el.outerHTML||el.innerHTML);
+		var cl_name = el._attributes['class'];
+		var cl = cl_name ? (TVComponents[cl_name] || window[cl_name]) : null;
+		if (cl && typeof(cl) != 'function') throw 'Not defined TVComponents.'+cl_name+' or '+cl_name+' class for component '+el._attributes.id;
+		return cl ? new cl(el, this.buttons, this, cl_name) : new TVComponent(el, this.buttons, this);
+	}.bind(this)).map(function(comp) {
+		comp.init();
+	});
 
 	// проверяем что нет ссылок на несуществующие кнопки,
 	// ищем стартовую и активную кнопку

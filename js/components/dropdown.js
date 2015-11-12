@@ -1,6 +1,8 @@
 TVComponents.Dropdown = function(el, adjacent_buttons, parent, class_name) {
     TVComponent.call(this, el, adjacent_buttons, parent, class_name);
 	this.val = null;
+	this.button = null;
+	this.slider = null;
 };
 TVComponents.Dropdown.default_title = 'Все';
 TVComponents.Dropdown.prototype = Object.create(TVComponent.prototype);
@@ -9,52 +11,65 @@ TVComponents.Dropdown.prototype.onready = function() {
 	var sides = ['up','down','left','right'];
 	// создаем кнопку
 	var el = TV.el('[data-type="dropdown_input"]', this.el);
-	var button = new TVButton(el, this.buttons, this);
-	sides.forEach(function(side){button[side] = 'out'}.bind(this));
+	this.button = new TVButton(el, this.buttons, this);
+	sides.forEach(function(side){this.button[side] = 'out'}.bind(this));
+	
 	// создаем компонент слайдера
     el = TV.el('[data-type="dropdown_slider"]', this.el);
-	var item_templ_name = (TV.app.curr_popup) ? TV.app.curr_popup.name : TV.app.curr_page.name;
-	el.setAttribute('data-item_template', 'item#'+item_templ_name+'.'+this.id);
-    var slider = new TVComponents.Slider(el, this.buttons, this);
-    slider.class_name = 'Slider';
-    slider.data = this.data;
-    slider.init();
+    var item_templ_name = 'item#' + (TV.app.curr_popup ? TV.app.curr_popup.name : TV.app.curr_page.name) + '.' + this.id;
+    if (this.attributes.item_template && TV.app.ejs[this.attributes.item_template]) item_templ_name = this.attributes.item_template;    
+	el.setAttribute('data-item_template', item_templ_name);
+    this.slider = new TVComponents.Slider(el, this.buttons, this);
+    this.slider.class_name = 'Slider';
+    this.slider.data = this.data;
+    this.slider.init();
+	
 	// если элементов в слайдере меньше, чем указано в data-count, подгоняем высоту
-	if (slider.data.length <= slider.count) slider.el.style.height = TV.getSize(TV.el('.slider-item', slider.el)).height * slider.data.length + 'px';
-    slider.disable();
+	if (this.data.length <= this.slider.count) this.slider.el.style.height = TV.getSize(TV.el('.slider-item', this.slider.el)).height * this.slider.data.length + 'px';
+    this.slider.disable();
 
-	this.buttons._start_btn = button;
+	this.buttons._start_btn = this.button;
 	this.enable();
+	this.attachCallbacks();
+	
+	// выставляем стартовое значение
+	this.data.forEach(function(el) {
+		if (el.selected) {
+			for (var id in this.slider.buttons) {	
+				if (el.id == this.slider.buttons[id].attributes.key) this.slider.buttons[id].onmouseclick();
+			}
+		}
+	}.bind(this));
+};
 
-	button.onclick = function() {
-		button.disable();
-		slider.buttons._act_btn && slider.buttons._act_btn.resetAct();
-		this.buttons._hover_btn = this.buttons._start_btn = slider;
-		slider.enable();
-		slider.onmouseover();
+TVComponents.Dropdown.prototype.attachCallbacks = function() {
+	this.button.onclick = function() {
+		this.button.disable();
+		this.slider.buttons._act_btn && this.slider.buttons._act_btn.resetAct();
+		this.buttons._hover_btn = this.buttons._start_btn = this.slider;
+		this.slider.enable();
+		this.slider.onmouseover();
 	}.bind(this);
     
-    slider.onclick = function(id) {
-	    if (typeof(id) == 'object') {
-		    TVComponent.prototype.onenter.call(slider);
+    this.slider.onclick = function(key) {
+	    if (typeof(key) == 'object') {
+		    TVComponent.prototype.onenter.call(this.slider);
 		    return;
 	    }
-	    this.val = this.data.filter(function(el) {
-		    return el.id == id;
-	    })[0];
-	    TV.el('input',button.el).value = this.val ? this.val.title : TVComponents.Dropdown.default_title;
-	    if (this.onclick) this.onclick(id);
-        slider.disable();
+	    this.val = this.data.find(function(el) { return el.id == key; });
+	    TV.el('input', this.button.el).value = this.val ? this.val.title : TVComponents.Dropdown.default_title;
+	    if (this.onclick) this.onclick(key);
+        this.slider.disable();
         this.buttons._act_btn && this.buttons._act_btn.resetAct();
-	    this.buttons._hover_btn = this.buttons._start_btn = button;
-        button.enable();
+	    this.buttons._hover_btn = this.buttons._start_btn = this.button;
+        this.button.enable();
     }.bind(this);
 
-	slider.onout = function() {
-		this.buttons._hover_btn = this.buttons._start_btn = button;
-		slider.disable();
-		button.resetHover();
-		button.resetAct();
-		button.enable();
+	this.slider.onout = function() {
+		this.buttons._hover_btn = this.buttons._start_btn = this.button;
+		this.slider.disable();
+		this.button.resetHover();
+		this.button.resetAct();
+		this.button.enable();
 	}.bind(this);
 };
