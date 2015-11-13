@@ -156,8 +156,8 @@ TVComponent.prototype.render = function(start_btn_id) {
 	if (this.onready) this.onready();
 };
 
-TVComponent.prototype.onButtonClick = function(btn) {
-	if (this.onclick) this.onclick(btn.id, btn);
+TVComponent.prototype.onButtonClick = function(btn, event) {
+	if (this.onclick) this.onclick(btn.id, btn, event);
 };
 
 TVComponent.prototype.onButtonHover = function(btn) {

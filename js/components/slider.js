@@ -162,6 +162,7 @@ TVComponents.Slider.prototype._makeComponents = function(root_el, root_btn) {
 		btn.onclick = function(a, b) {
 			if (this.onclick) this.onclick(a, b);
 		}.bind(this);
+		if (btn.attributes.disabled) btn.disable();
 		if (btn.attributes.start && !btn.attributes.disabled && !btn.disabled) root_btn.buttons._start_btn = btn;
 		if (!first_btn && !btn.disabled) first_btn = btn;
 	}

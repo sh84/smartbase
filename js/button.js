@@ -218,7 +218,7 @@ TVButton.prototype.onmouseout = function() {
 	if (this.onout) this.onout();
 };
 
-TVButton.prototype.onmouseclick = function() {
+TVButton.prototype.onmouseclick = function(event) {
 	if (this.disabled) return;
 	if (!this.isMouseOnly()) {
 		var act_btn = this.adjacent_buttons._act_btn;
@@ -235,7 +235,7 @@ TVButton.prototype.onmouseclick = function() {
 		var el = TV.el('[data-type][data-id="'+btn_id+'"]', this.parent ? this.parent.el : null);
 		TV.removeClass(el, TVButton.pressed_class);
 	}.bind(this), 300);
-	if (this.onclick) this.onclick(this);
+	if (this.onclick) this.onclick(this, event);
 };
 
 TVButton.prototype.oncursor = function(side) {
