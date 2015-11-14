@@ -51,30 +51,28 @@ TV.PlayerWrapper.prototype.attachCallbacks = function() {
 			this.onready && this.onready();
 		}.bind(this);
 		this.el.OnCurrentPlayTime = function(time) {
-
 			//TODO убрать заглушку
-    		if (TV.platform.isTizen) {
+			if (TV.platform.isTizen) {
 				TV.log("time:", this.dummy_start, time);
-        		//TODO написать корректное условие, различающее live/vod
-				
+				//TODO написать корректное условие, различающее live/vod
+
 				// Первое срабатывание OnCurrentPlayTime
-        		if (this.dummy_start === null) {
+				if (this.dummy_start === null) {
 					// Был автосик, значит это vod
 					if (this.has_seek) {
 						this.dummy_start = 0;
 					} else {
-            			this.dummy_start = time;
+						// меньше 10 секунд не критично
+						if (time > 10000) this.dummy_start = time;
 					}
-        		}
-				
-        		time -= this.dummy_start;
-        		// Добавим 2.5 секунды ко времени, чтобы vod смог дойти до конца 
-        		time += 2500;
-    		}	
+				}
+				time -= this.dummy_start;
+			}
 
 			this._curr_time = time;
 			this.onprogress && this.onprogress(time);
 		}.bind(this);
+
 		var fn_buff = function(val) {
 			this.onbuffering && this.onbuffering(val);
 		};
@@ -350,6 +348,7 @@ TV.PlayerWrapper.prototype.resume = function() {
 TV.PlayerWrapper.prototype.stop = function() {
 	if (TV.platform.isSamsung) {
 		this.el.Stop();
+		if (TV.platform.isTizen) this.dummy_start = null;
 	} else if (TV.platform.isLG || TV.platform.isWebOs || TV.platform.isPhilips) {
 		this.el.stop();
 	} else if (TV.platform.isBrowser) {
