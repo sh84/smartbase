@@ -47,7 +47,8 @@ TVComponents.Slider.prototype.onready = function() {
 	this.first_btn_id = this.last_btn_id = this.first_el_pos = this.last_el_pos = null;
 	this.start_position = 0;
 	
-	if (this.loop && this.data.length >= this.loop_start_count) {
+	if (this.attributes['loop'] && this.data.length >= this.loop_start_count) {
+		this.loop = true;
 		this.dynamic = true;
 		this.scrollbar = false;
 	} else {
