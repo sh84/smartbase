@@ -6,7 +6,9 @@ TVComponents.Player = function(el, adjacent_buttons, parent, class_name) {
 		seek: null,            // сделать сик при старте
 		duration: null,        // предопределенная длительность, секунд
 		max_seek: null,        // крайняя позиция допустимого сика, секунд (null - использовать duration)
-		base_time: null        // базовое время текщей позиции, секунд 
+		base_time: null,       // базовое время текщей позиции, секунд 
+		allow_seek: true,
+		allow_pause: true
 	};
 	this.state = 'stop';	   // состояния: stop, play, pause
 	this.curr_time = 0;		   // текущее время в секундах
@@ -359,7 +361,8 @@ TVComponents.Player.prototype.play = function() {
 };
 
 TVComponents.Player.prototype.pause = function() {
-	TV.log('pause');
+	TV.log('pause', this.data.allow_pause);
+	if (! this.data.allow_pause) return;
 	if (this.buffering) return;
 	this.stateChange('pause');
 	this.video.pause();
@@ -390,7 +393,8 @@ TVComponents.Player.prototype.stop = function() {
 };
 
 TVComponents.Player.prototype.seek = function(seek_time, show) {
-	TV.log('seek', seek_time);
+	TV.log('seek', this.data.allow_seek, seek_time);
+	if (! this.data.allow_seek) return;
 	if (seek_time < 0) seek_time = 0;
 	if (seek_time > (this.data.max_seek || this.duration)) seek_time = this.data.max_seek || this.duration;
 	if (this.buffering || seek_time == this.curr_time) return;
