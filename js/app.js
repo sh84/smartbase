@@ -354,3 +354,25 @@ TV.prototype.onSamsungShow = function() {
 		TV.plugin_api.unregistKey(27); // Unregistering VOL_MUTE
 	}
 };
+
+TV.prototype.setVolumeUp = function() {
+	var el = TV.el('pluginAudio');
+	if (el) {
+		el.SetVolumeWithKey(0);
+	}
+};
+
+TV.prototype.setVolumeDown = function() {
+    var el = TV.el('pluginAudio');
+    if (el) {
+        el.SetVolumeWithKey(1);
+    }
+};
+
+TV.prototype.getVolume = function() {
+    var el = TV.el('pluginAudio');
+    if (el) {
+		return el.GetVolume();
+    }
+	return undefined;
+};
