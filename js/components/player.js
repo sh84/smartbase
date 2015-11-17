@@ -344,6 +344,7 @@ TVComponents.Player.prototype.play = function() {
 	if (this.state == 'stop') {
 		this.stateChange('play');
 		// обновляем таймлайн
+		this.data = this._data_fn();
 		this.curr_time = this.data.base_time || 0;
 		this.updateTimeline();
 		// лоадер
