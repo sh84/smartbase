@@ -343,9 +343,10 @@ TVComponents.Player.prototype.play = function() {
 	TV.addClass(this.buttons.play.el, TVComponents.Player.btn_pause_class);
 	if (this.state == 'stop') {
 		this.stateChange('play');
-		// обновляем таймлайн
 		this.data = this._data_fn();
+		this.video.url = this.data.url;
 		this.curr_time = this.data.base_time || 0;
+		// обновляем таймлайн
 		this.updateTimeline();
 		// лоадер
 		TV.show('[data-id="player_loader"]', this.el);
@@ -394,7 +395,7 @@ TVComponents.Player.prototype.stop = function() {
 };
 
 TVComponents.Player.prototype.seek = function(seek_time, show) {
-	TV.log('seek', this.data.allow_seek, seek_time);
+	TV.log('seek', 'allow_seek='+this.data.allow_seek, 'seek_time='+seek_time);
 	if (! this.data.allow_seek) return;
 	if (seek_time < 0) seek_time = 0;
 	if (seek_time > (this.data.max_seek || this.duration)) seek_time = this.data.max_seek || this.duration;
