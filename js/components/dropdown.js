@@ -12,7 +12,9 @@ TVComponents.Dropdown.prototype.onready = function() {
 	// создаем кнопку
 	var el = TV.el('[data-type="dropdown_input"]', this.el);
 	this.button = new TVButton(el, this.buttons, this);
-	sides.forEach(function(side){this.button[side] = 'out'}.bind(this));
+	sides.forEach(function(side) {
+		this.button[side] = 'out';
+	}.bind(this));
 	
 	// создаем компонент слайдера
     el = TV.el('[data-type="dropdown_slider"]', this.el);
@@ -22,6 +24,9 @@ TVComponents.Dropdown.prototype.onready = function() {
     this.slider = new TVComponents.Slider(el, this.buttons, this);
     this.slider.class_name = 'Slider';
     this.slider.data = this.data;
+    for (var i=0; i < this.slider.data.length; i++) {
+    	if (typeof(this.slider.data[i].id) == 'undefined') this.slider.data[i].id = i;
+    }
     this.slider.init();
 	
 	// если элементов в слайдере меньше, чем указано в data-count, подгоняем высоту
