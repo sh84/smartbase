@@ -106,8 +106,8 @@ TVComponents.Scroller.prototype._checkEnding = function(el , k) {
 		first: 0,
 		last: (this.is_horizontal) ?  TV.getSize(el).width - TV.getSize(this.frame_el).width + this.step : TV.getSize(el).height - TV.getSize(this.frame_el).height + this.step
 	};
-	if (k <= Math.abs(boundary.first)) return 'start';
-	if (k >= Math.abs(boundary.last)) return 'end';
+	if (k < Math.abs(boundary.first)) return 'start';
+	if (k > Math.abs(boundary.last)) return 'end';
 	return false;
 };
 
