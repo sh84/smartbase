@@ -355,21 +355,76 @@ TV.prototype.onSamsungShow = function() {
 	}
 };
 
+
+// Volume actions
+TV.prototype.isSupportVolumeActions = function() {
+	//samsung
+	var el = TV.el('pluginAudio');
+	if (el && el.SetVolumeWithKey)
+		return true;
+
+	//webos
+	if (typeof (webOS) != "undefined" && webOS.service)
+		return true;
+
+	return false;
+}
+
 TV.prototype.setVolumeUp = function() {
+	//samsung
 	var el = TV.el('pluginAudio');
 	if (el) {
 		el.SetVolumeWithKey(0);
-	}
+		return;
+	};
+
+	//webos
+	if (typeof (webOS) != "undefined"){
+		webOS.service.request("luna://com.webos.audio", {
+    		method: "volumeUp",
+    		onComplete: function (inResponse) {
+        		var isSucceeded = inResponse.returnValue;
+ 
+        		if (isSucceeded){
+					return;
+        		} else {
+            		console.log("Failed to increase volume by 1.");
+            		return;
+        		}
+    		}
+		});
+	};
+
 };
 
 TV.prototype.setVolumeDown = function() {
+	//samsung
     var el = TV.el('pluginAudio');
     if (el) {
         el.SetVolumeWithKey(1);
-    }
+    };
+
+    //webos
+    if (typeof (webOS) != "undefined"){
+        webOS.service.request("luna://com.webos.audio", {
+            method: "volumeDown",
+            onComplete: function (inResponse) {
+                var isSucceeded = inResponse.returnValue;
+ 
+                if (isSucceeded){
+                    return;
+                } else {
+                    console.log("Failed to decrease volume by 1.");
+                    return;
+                }
+            }
+        });
+    };
+
 };
 
 TV.prototype.getVolume = function() {
+	//samsung
     var el = TV.el('pluginAudio');
     if (el) {
 		return el.GetVolume();
