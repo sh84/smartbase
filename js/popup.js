@@ -40,6 +40,7 @@ TVPopup.prototype.show = function() {
 
 TVPopup.prototype.hide = function() {
 	if (this.app.curr_popup != this) throw 'Can not hide non current popup';
+	this.beforehide();
 	TVButton.clearAll(this.app.curr_popup);
 	this.app.curr_popup = null;
 	TV.setHTML(this.el, '');
@@ -49,6 +50,9 @@ TVPopup.prototype.hide = function() {
 	this.afterhide();
 };
 
+TVPopup.prototype.beforehide = function() {
+	// вызывается перед hide
+};
 
 TVPopup.prototype.afterhide = function() {
 	// вызывается послe hide

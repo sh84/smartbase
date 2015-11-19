@@ -76,7 +76,7 @@ TVComponents.Player.prototype.onready = function() {
 	
 	// стартуем
 	this.video.url = this.data.url;
-	if (this.autostart) setTimeout(function() {
+	if (this.autostart && this.video.url) setTimeout(function() {
 		this.play();
 	}.bind(this), 0);
 	
