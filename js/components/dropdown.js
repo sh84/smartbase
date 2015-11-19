@@ -61,7 +61,7 @@ TVComponents.Dropdown.prototype.attachCallbacks = function() {
 		    TVComponent.prototype.onenter.call(this.slider);
 		    return;
 	    }
-	    this.val = this.data.find(function(el) { return el.id == key; });
+	    this.val = this.data.filter(function(el) { return el.id == key; })[0];
 	    TV.el('input', this.button.el).value = this.val ? this.val.title : TVComponents.Dropdown.default_title;
 	    if (this.onclick) this.onclick(key);
         this.slider.disable();
