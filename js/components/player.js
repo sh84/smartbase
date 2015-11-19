@@ -170,9 +170,9 @@ TVComponents.Player.prototype.onAnyKey = function(key_code) {
 	} else if (key_code == TV.keys.stop) {
 		this.buttons.stop.onmouseclick();
 	} else if (key_code == TV.keys.rw) {
-		if (this.state == 'play') this.btnProcessSeek(-1);
+		this.btnProcessSeek(-1);
 	} else if (key_code == TV.keys.ff) {
-		if (this.state == 'play') this.btnProcessSeek(1);
+		this.btnProcessSeek(1);
 	} else if (key_code == TV.keys.return) {
 		if (this.hide_panel) {
 			return;
@@ -187,7 +187,7 @@ TVComponents.Player.prototype.onAnyKey = function(key_code) {
 };
 
 TVComponents.Player.prototype.btnProcessSeek = function(direction) {
-	if (this._where_to_seek === null && this.state != 'play') return;
+	if (this._where_to_seek === null && this.state != 'play' || this.buffering) return;
 	TV.show('[data-id="player_loader"]', this.el);
 	if (this.state == 'play') this.pause();
 	if (this._where_to_seek === null) this._where_to_seek = this.curr_time;
