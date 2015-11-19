@@ -131,18 +131,18 @@ TVComponents.GridSlider.prototype._setButtons = function() {
 	}
 	this.first_btn_id = els[0]._attributes.id;
 	this.last_btn_id = els[els.length-1]._attributes.id;
-	for (y = 0; y < this.box_y; y++) {
-		for (x = 0; x < this.box_x; x++) {
+	for (y = 0; y < this.box.length; y++) {
+		for (x = 0; x < this.box[y].length; x++) {
 			var btn = this.buttons[this.box[y][x]];
 			if (!btn) continue;
 			btn.up = y > 0 && this.box[y-1][x] ? this.box[y-1][x] : 'out';
-			btn.down = y < this.box_y-1 && this.box[y+1][x] ? this.box[y+1][x] : 'out';
+			btn.down = y < this.box.length-1 && this.box[y+1][x] ? this.box[y+1][x] : 'out';
 			btn.left = x > 0 && this.box[y][x-1] ? this.box[y][x-1] : 'out';
-			btn.right = x < this.box_x-1 && this.box[y][x+1] ? this.box[y][x+1] : 'out';
+			btn.right = x < this.box[y].length-1 && this.box[y][x+1] ? this.box[y][x+1] : 'out';
 			if (this.is_vertical) {
-				if (y < this.box_y-1 && btn.down == 'out') btn.down = this.last_btn_id;
+				if (y < this.box.length-1 && btn.down == 'out') btn.down = this.last_btn_id;
 			} else {
-				if (x < this.box_x-1 && btn.right == 'out') btn.right = this.last_btn_id;
+				if (x < this.box[y].length-1 && btn.right == 'out') btn.right = this.last_btn_id;
 			}
 			if (btn[this.first_side] == 'out' && this.start_position > 0) btn[this.first_side] = '';
 			if (btn[this.last_side] == 'out' && this.start_position + this.count < this.data.length) btn[this.last_side] = '';
