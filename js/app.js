@@ -237,8 +237,10 @@ TV.prototype.renderFooter = function() {
 	}
 	this._footer_btns = {};
 	['red', 'yellow', 'green', 'blue', 'return'].forEach(function(key) {
-		var el = TV.el('[data-type="footer-'+key+'"]', this.el);
-		if (el && (!app.curr_popup || key == 'return')) {
+		var el = TV.el('[data-type="footer-'+key+'"]', this.el),
+			allow_on_popup = this.curr_page['key_'+key+'_on_popup'] && this.curr_page['key_'+key+'_on_popup'] !== 'false' ? true : false;
+
+		if (el && (!this.curr_popup || allow_on_popup || key == 'return')) {
 			//el.setAttribute('data-type', 'button');
 			var btn = new TVButton(el, this._footer_btns);
 			btn.onclick = function(curr_btn) {
