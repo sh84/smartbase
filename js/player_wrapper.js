@@ -13,6 +13,7 @@ TV.PlayerWrapper = function(el) {
 		this.el = document.createElement('object');
 		this.el.setAttribute("type", "application/avplayer");
 		document.body.insertBefore(this.el, document.body.firstChild);
+		this._getVideoPluginRect();
 	} else if (TV.platform.isSamsung) {
 		if (!this.el) throw 'Not defined video element for player';
 		this._body_background = document.body.style.background;
@@ -274,8 +275,25 @@ TV.PlayerWrapper.prototype._getVideoPluginRect = function() {
 	var window_plugin = TV.el('pluginWindow'),
 		delimiter,
 		rect;
+	if (TV.platform.isTizen) {
+		this.video_window_w = 1920;
+		this.video_window_h = 1080;
 
-	if (window_plugin.GetScreenRect) {
+		tizen.systeminfo.getPropertyValue(
+            "DISPLAY",
+            function (display) {
+                TV.log("The display width is " + display.resolutionWidth);
+				this.video_window_w = display.resolutionWidth;
+				this.video_window_h = display.resolutionHeight;
+            },
+            function(error) {
+                TV.log("An error occurred " + error.message);
+            }
+        );
+
+	    this.app_w = window.screen.availWidth;	
+
+	} else if (window_plugin.GetScreenRect) {
 		rect = window_plugin.GetScreenRect();
 		delimiter = /\//.test(rect) ? '/' : ',';
 		rect = rect.split(delimiter); // Tizen returns string '..., w: <w>, h: <h>', Orsay - string '<top>/<left>/<w>/<h>'
@@ -349,7 +367,10 @@ TV.PlayerWrapper.prototype.play = function() {
 		TV.log('Tizen setDisplayRect', this._display_left, this._display_top, this._display_width, this._display_height);
 		// TODO: выставлять реальный setDisplayRect пересчитывая по размеру экрана
 		//webapis.avplay.setDisplayRect(this._display_left, this._display_top, this._display_width, this._height);
-		webapis.avplay.setDisplayRect(0, 0, 1920, 1080);
+		webapis.avplay.setDisplayRect(this._display_left * this.video_window_w / this.app_w, 
+									  this._display_top * this.video_window_w / this.app_w,
+                                      this._display_width * this.video_window_w / this.app_w,
+                                      this._display_height * this.video_window_w / this.app_w);
 		webapis.avplay.prepare();
 		TV.log('Tizen play');
 		webapis.avplay.play();
