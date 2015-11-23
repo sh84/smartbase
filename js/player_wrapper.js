@@ -114,66 +114,68 @@ TV.PlayerWrapper.prototype.attachCallbacks = function() {
 		this.el.OnNetworkDisconnected = fn_err.bind(this, 'Network Disconnected');
 		this.el.OnStreamNotFound = fn_err.bind(this, 'Stream Not Found');
 		this.el.OnServerError = fn_err.bind(this, 'Server Error');
-    } else if (TV.platform.isPhilips) {
-        var info_ready = false;
+	} else if (TV.platform.isPhilips) {
+		var info_ready = false;
+		this.el.onPlayStateChange = function() {
+			TV.log('onPlayStateChange', this.el.playState, this.el.playTime);
+			switch (this.el.playState) {
+			case 5:
+				// finished
+				break;
+			case 0:
+				// stopped
+				break;
+			case 6:
+				// error
+				break;
+			case 1:
+				// playing
+				if (this.el.playTime && !info_ready) {
+					TV.log('ready to play', this.el.playTime);
+					if (this.el.playTime < ('1e9' - 1)) {
+						info_ready = true;
+						this.onready && this.onready();
+					} else {
+						this.play();
+					}
+				}
+				break;
+			case 2:
+				// paused
+				break;
+			case 3:
+				// connecting
+				break;
+			case 4:
+				// buffering
+				this.onbuffering && this.onbuffering(0);
+				break;
+			default:
+				// do nothing
+				break;
+			}
+		}.bind(this);
+		// Прогресс проигрывания/буфферинга
+		this._timer = setInterval( function() {
+			// Playing
+			if (this.el.playState == 1) {
+				if (this._trick_seek_inprogress) {
+					// Недавно был seek, нужно проверить, правильно ли мы перешли
+					// -1 - чтобы показать, что нужно проверить старый seek, а не делать новый
+					if (this.seek(-1) === false) return;
+				}
+				//TV.log('_timer this.el.playState == 1', this.el.playState, this.el.playPosition);
+				this._curr_time = this.el.playPosition * 1;
+				this.onprogress && this.onprogress(this.el.playPosition * 1);
+			}
 
-        this.el.onPlayStateChange = function() {
-            TV.log('onPlayStateChange', this.el.playState, this.el.playTime);
-            switch (this.el.playState) {
-                case 5: // finished
-                    break;
-                case 0: // stopped
-                    break;
-                case 6: // error
-                    break;
-                case 1: // playing
-                    if (this.el.playTime && !info_ready) {
-                        TV.log('ready to play', this.el.playTime);
-                        if (this.el.playTime < ('1e9' - 1)) {
-                            info_ready = true;
-                            this.onready && this.onready();
-                        } else {
-                            this.play();
-                        }
-                    }
-                    break;
-                case 2: // paused
-                    break;
-                case 3: // connecting
-                    break;
-                case 4: // buffering
-                    this.onbuffering && this.onbuffering(0);
-                    break;
-                default:// do nothing
-                    break;
-            }
-        }.bind(this);
-        
-        //TV.log(Object.getOwnPropertyNames(this.el).length);
-
-        // Прогресс проигрывания/буфферинга
-        this._timer = setInterval(function() {
-        
-            // Недавно был seek, нужно проверить, правильно ли мы перешли
-            if (this._trick_seek_inprogress) {
-                this.seek(0); // 0 - чтобы показать, что нужно проверить старый seek, а не делать новый
-            }
-
-            // Playing
-            if (this.el.playState == 1) {
-                //TV.log('_timer this.el.playState == 1', this.el.playState, this.el.playPosition);
-                this._curr_time = this.el.playPosition*1;
-                this.onprogress && this.onprogress(this.el.playPosition*1);
-            }
-
-            // Buffering
-            // У филипса нет bufferingProgress. Так и оставлять 50?
-            if (this.el.playState == 4) {
-                //TV.log('_timer this.el.playState == 4', this.el.playState, this.el.bufferingProgress);
-                this.onbuffering && this.onbuffering(this.el.bufferingProgress || 50);
-            }
-        }.bind(this), 500);
-
+			// Buffering
+			// У филипса нет bufferingProgress. Так и оставлять 50?
+			if (this.el.playState == 4) {
+				//TV.log('_timer this.el.playState == 4', this.el.playState, this.el.bufferingProgress);
+				this.onbuffering && this.onbuffering(this.el.bufferingProgress || 50);
+			}
+		}.bind(this), 500);
 	} else if (TV.platform.isLG || TV.platform.isWebOs) {
 		var info_ready = false;
 		this.el.onPlayStateChange = function() {
@@ -419,7 +421,7 @@ TV.PlayerWrapper.prototype.seek = function(seek_time) {
 	} else if (TV.platform.isSamsung) {
 		var val = seek_time - this._curr_time;
 		if (val > 0) {
-			if (TV.platform.isSamsung && seek_time >= this.el.GetDuration()) val -= 1000;
+			if (seek_time >= this.el.GetDuration()) val -= 1000;
 			this.el.JumpForward(val/1000);
 		} else {
 			this.el.JumpBackward(Math.abs(val/1000));
@@ -427,36 +429,38 @@ TV.PlayerWrapper.prototype.seek = function(seek_time) {
 	} else if (TV.platform.isLG || TV.platform.isWebOs) {
 		this.el.seek(seek_time);
     } else if (TV.platform.isPhilips) {
-        if (seek_time > 0 && seek_time < this.el.playTime){
-            TV.log('Philips seek to', seek_time);
-            this.el.seek(seek_time);
-                
+    	TV.log('Philips seek to', seek_time, this.el.playTime);
+        if (seek_time >= 0 && seek_time <= this.el.playTime) {
             // Выставляем параметры двойного seek-а
             this._trick_seek_inprogress = true;
             this._trick_seek_position = seek_time;
             this._trick_seek_from = this.el.playPosition;
+            this.el.seek(seek_time);
+            TV.log('Philips seek_from', this._trick_seek_from);
             return;
-            
-        } else if (this._trick_seek_inprogress && this.el.playPosition > 0){
+        } else if (this._trick_seek_inprogress && this.el.playPosition > 0) {
             // Сейчас находимся в процессе двойного seek-а
             // Второй раз seek делаем, только если не установлен seek_time
-
+			
             // Seek еще не произошел
             if (Math.abs(this._trick_seek_from - this.el.playPosition) < this._trick_seek_threshold) {
-                return;
+            	TV.log('Seek has not occurred');
+                return false;
             }
 
             var trick_seek_diff = this.el.playPosition - this._trick_seek_position;
             var correct_seek_position = Math.floor(this._trick_seek_position * this._trick_seek_position / this.el.playPosition);
+            TV.log('Philips trick seek, trick_seek_diff=' + trick_seek_diff, 'playState='+this.el.playState);
             if (Math.abs(trick_seek_diff) > this._trick_seek_threshold) {
                 TV.log('Philips trick seek to ' + correct_seek_position + ' now pos is ' + this.el.playPosition + ' have to be ' + this._trick_seek_position);
                 this.el.seek(correct_seek_position);
+                this._trick_seek_inprogress = false;
+                return false;
             }
         }
         
         // В любом случае выходим из двойного seek-а
-        this._trick_seek_inprogress = false;        
-
+        this._trick_seek_inprogress = false;
 	} else if (TV.platform.isBrowser ) {
 		if (seek_time/1000 < 0 || seek_time/1000 > this.el.duration ) return;
 		this.el.currentTime = seek_time/1000;
