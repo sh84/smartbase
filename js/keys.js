@@ -59,8 +59,8 @@ if (TV.platform.isTizen) {
 		TV.keys.num_8 = map_keys['8'];
 		TV.keys.num_9 = map_keys['9'];
 		TV.keys.num_0 = map_keys['0'];
-		TV.keys.page_up = map_keys['ChannelUp'];
-		TV.keys.page_down = map_keys['ChannelDown'];
+		TV.keys.ch_next = map_keys['ChannelUp'];
+		TV.keys.ch_prev = map_keys['ChannelDown'];
 	}, 1000);
 } else if (TV.platform.isSamsung) {
 	if (!TV.key_api) TV.key_api = new Common.API.TVKeyValue();
@@ -91,8 +91,8 @@ if (TV.platform.isTizen) {
 	TV.keys.num_8 = TV.key_api.KEY_8;
 	TV.keys.num_9 = TV.key_api.KEY_9;
 	TV.keys.num_0 = TV.key_api.KEY_0;
-	TV.keys.page_up = -1;
-	TV.keys.page_down = -1;
+	TV.keys.ch_next = TV.key_api.KEY_CH_UP;
+	TV.keys.ch_prev = TV.key_api.KEY_CH_DOWN;
 } else if (TV.platform.isLG || TV.platform.isWebOs) {
 	TV.keys.exit = -1;
 	TV.keys.left = 37;
@@ -121,8 +121,15 @@ if (TV.platform.isTizen) {
 	TV.keys.num_8 = 56;
 	TV.keys.num_9 = 57;
 	TV.keys.num_0 = 48;
-	TV.keys.page_up = 33;
-	TV.keys.page_down = 34;
+	if (TV.platform.isLG || /537/.test(navigator.appVersion)) {
+		// webOS 1.* or NetCast
+		TV.keys.ch_next = 33;
+		TV.keys.ch_prev = 34;
+	} else {
+		// webOS 2.*
+		TV.keys.ch_next = 70;
+		TV.keys.ch_prev = 71;
+	}
 } else if (TV.platform.isPhilips) {
 	TV.keys.exit = -1;
 	TV.keys.left = VK_LEFT;
@@ -151,8 +158,8 @@ if (TV.platform.isTizen) {
 	TV.keys.num_8 = VK_8;
 	TV.keys.num_9 = VK_9;
 	TV.keys.num_0 = VK_0;
-	TV.keys.page_up = VK_PAGE_UP;
-	TV.keys.page_down = VK_PAGE_DOWN;
+	TV.keys.ch_next = VK_PAGE_UP;
+	TV.keys.ch_prev = VK_PAGE_DOWN;
 } else if (TV.platform.isBrowser) {
 	TV.keys.exit = 27;   //esc
 	TV.keys.left = 37;
@@ -181,6 +188,6 @@ if (TV.platform.isTizen) {
 	TV.keys.num_8 = 104;
 	TV.keys.num_9 = 105;
 	TV.keys.num_0 = 96;
-	TV.keys.page_up = 33;
-	TV.keys.page_down = 34;
+	TV.keys.ch_next = 33;
+	TV.keys.ch_prev = 34;
 };
