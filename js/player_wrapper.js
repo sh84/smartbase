@@ -384,7 +384,8 @@ TV.PlayerWrapper.prototype.pause = function() {
 
 TV.PlayerWrapper.prototype.resume = function() {
 	if (TV.platform.isTizen) {
-		webapis.avplay.play();
+		if (webapis.avplay.getState() != 'PLAYING')
+			webapis.avplay.play();
 	} else if (TV.platform.isSamsung) {
 		this.el.Resume();
 	} else if (TV.platform.isLG || TV.platform.isWebOs || TV.platform.isPhilips) {
@@ -412,7 +413,7 @@ TV.PlayerWrapper.prototype.stop = function() {
 TV.PlayerWrapper.prototype.seek = function(seek_time) {
 	if (TV.PlayerWrapper.server_seek  && TV.PlayerWrapper.server_seek(this, seek_time) === false) return;
 	if (TV.platform.isTizen) {
-		//if (TV.platform.isTizen && seek_time >= webapis.avplay.getDuration()) seek_time -= 1000;
+		if (seek_time >= webapis.avplay.getDuration()) seek_time -= 1000;
 		TV.log('Tizen seek', seek_time);
 		webapis.avplay.seekTo(seek_time);
 	} else if (TV.platform.isSamsung) {
