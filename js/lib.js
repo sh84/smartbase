@@ -26,6 +26,7 @@ if (!Function.prototype.bind) {
 	var em = false;
 
 	if (navigator.userAgent.match(/smarttv/i)) p = 'samsung';
+	if (navigator.userAgent.match(/Tizen/i)) p = 'tizen';
 	if (navigator.userAgent.match(/LG Browser/i)) p = 'lg';
 	if (navigator.userAgent.match(/WebOS|Web0S/i)) p = 'webos';
 	// Может лучше искать NETTV: NETTV/4.0.2? 
@@ -35,15 +36,11 @@ if (!Function.prototype.bind) {
 	TV.platform = [p, em];
 	TV.platform.isLG = p == 'lg';
 	TV.platform.isSamsung = p == 'samsung';
+	TV.platform.isTizen = p == 'tizen';
 	TV.platform.isBrowser = p == 'browser';
 	TV.platform.isWebOs = p == 'webos';
 	TV.platform.isPhilips = p == 'philips';
 	TV.platform.isEmulator = em;
-
-	// Для Tizen платформ выставляем и isSamsung и isTizen
-	if (navigator.userAgent.match(/Tizen/i)) p = 'tizen';
-	TV.platform.isTizen = p == 'tizen';
-
 })();
 
 // ищет элемент по id или css выражению

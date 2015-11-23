@@ -9,7 +9,11 @@ TV.PlayerWrapper = function(el) {
 
 	this.el = TV.el(el);
 	if (this.el) TV.PlayerWrapper.video_el = this.el;
-	if (TV.platform.isSamsung) {
+	if (TV.platform.isTizen) {
+		this.el = document.createElement('object');
+		this.el.setAttribute("type", "application/avplayer");
+		document.body.insertBefore(this.el, document.body.firstChild);
+	} else if (TV.platform.isSamsung) {
 		if (!this.el) throw 'Not defined video element for player';
 		this._body_background = document.body.style.background;
 		document.body.style.background = 'none';
@@ -46,33 +50,56 @@ TV.PlayerWrapper = function(el) {
 TV.PlayerWrapper.server_seek = null;
 
 TV.PlayerWrapper.prototype.attachCallbacks = function() {
-	if (TV.platform.isSamsung) {
-		this.el.OnStreamInfoReady = function() {
-			this.onready && this.onready();
-		}.bind(this);
-		this.el.OnCurrentPlayTime = function(time) {
-			//TODO убрать заглушку
-			if (TV.platform.isTizen) {
-				TV.log("time:", this.dummy_start, time);
-				//TODO написать корректное условие, различающее live/vod
-
-				// Первое срабатывание OnCurrentPlayTime
+	if (TV.platform.isTizen) {
+		var fn_buff = function(val) {
+			this.onbuffering && this.onbuffering(val);
+		};
+		var info_ready = false;
+		webapis.avplay.setListener({
+			onbufferingstart: fn_buff.bind(this, 0),
+			onbufferingprogress: fn_buff.bind(this),
+			onbufferingcomplete: fn_buff.bind(this, 100),
+			oncurrentplaytime: function(time) {
+				TV.log("Current playtime: " + time);
 				if (this.dummy_start === null) {
 					// Был автосик, значит это vod
 					if (this.has_seek) {
 						this.dummy_start = 0;
 					} else {
 						// меньше 10 секунд не критично
-						if (time > 10000) this.dummy_start = time;
+						if (time > 10000) {
+							this.dummy_start = time;
+						} else {
+							this.dummy_start = 0;
+						}
 					}
 				}
 				time -= this.dummy_start;
-			}
-
+				this._curr_time = time;
+				if (!info_ready) {
+					info_ready = true;
+					this.onready && this.onready();
+				}
+				this.onprogress && this.onprogress(time);
+			}.bind(this),
+			onevent: function(eventType, eventData) {
+				TV.log("Tizen event type: " + eventType + ", data: " + eventData);
+			}.bind(this),
+			onstreamcompleted: function() {
+				TV.log("Tizen stream completed");
+			}.bind(this),
+			onerror: function(error) {
+				this.onerror && this.onerror(error);
+			}.bind(this)
+		});
+	} else if (TV.platform.isSamsung) {
+		this.el.OnStreamInfoReady = function() {
+			this.onready && this.onready();
+		}.bind(this);
+		this.el.OnCurrentPlayTime = function(time) {
 			this._curr_time = time;
 			this.onprogress && this.onprogress(time);
 		}.bind(this);
-
 		var fn_buff = function(val) {
 			this.onbuffering && this.onbuffering(val);
 		};
@@ -147,7 +174,7 @@ TV.PlayerWrapper.prototype.attachCallbacks = function() {
             }
         }.bind(this), 500);
 
-	} else if (TV.platform.isLG || TV.platform.isWebOs || TV.platform.isPhilips) {
+	} else if (TV.platform.isLG || TV.platform.isWebOs) {
 		var info_ready = false;
 		this.el.onPlayStateChange = function() {
 			//TV.log('onPlayStateChange', this.el.playState, this.el.playTime)
@@ -291,10 +318,18 @@ TV.PlayerWrapper.prototype.setDisplayArea = function(left, top, width, height) {
 		this.el.style.zIndex = '1';
 		TV.log('setDisplayArea', this.el.style.left, this.el.style.top, this.el.style.width, this.el.style.height);
 	}
+	if (TV.platform.isTizen) {
+		this._display_left = left;
+		this._display_top = top;
+		this._display_width = width;
+		this._display_height = height;
+	}
 };
 
 TV.PlayerWrapper.prototype.getDuration = function() {
-	if (TV.platform.isSamsung) {
+	if (TV.platform.isTizen) {
+		return webapis.avplay.getDuration();
+	} else if (TV.platform.isSamsung) {
 		return this.el.GetDuration();
 	} else if (TV.platform.isLG || TV.platform.isWebOs || TV.platform.isPhilips) {
         TV.log('this.el.playTime', this.el.playTime);
@@ -306,7 +341,17 @@ TV.PlayerWrapper.prototype.getDuration = function() {
 
 TV.PlayerWrapper.prototype.play = function() {
     //TV.log('TV.PlayerWrapper.prototype.play');
-	if (TV.platform.isSamsung) {
+	if (TV.platform.isTizen) {
+		TV.log('Tizen open', this._getUrl());
+		webapis.avplay.open(this._getUrl());
+		TV.log('Tizen setDisplayRect', this._display_left, this._display_top, this._display_width, this._display_height);
+		// TODO: выставлять реальный setDisplayRect пересчитывая по размеру экрана
+		//webapis.avplay.setDisplayRect(this._display_left, this._display_top, this._display_width, this._height);
+		webapis.avplay.setDisplayRect(0, 0, 1920, 1080);
+		webapis.avplay.prepare();
+		TV.log('Tizen play');
+		webapis.avplay.play();
+	} else if (TV.platform.isSamsung) {
         //TV.log('isSamsung play', this._getUrl());
 		this.el.Play(this._getUrl());
 	} else if (TV.platform.isLG || TV.platform.isWebOs) {
@@ -326,7 +371,9 @@ TV.PlayerWrapper.prototype.play = function() {
 };
 
 TV.PlayerWrapper.prototype.pause = function() {
-	if (TV.platform.isSamsung) {
+	if (TV.platform.isTizen) {
+		webapis.avplay.pause();
+	} else if (TV.platform.isSamsung) {
 		this.el.Pause();
 	} else if (TV.platform.isLG || TV.platform.isWebOs || TV.platform.isPhilips) {
 		this.el.play(0);
@@ -336,7 +383,9 @@ TV.PlayerWrapper.prototype.pause = function() {
 };
 
 TV.PlayerWrapper.prototype.resume = function() {
-	if (TV.platform.isSamsung) {
+	if (TV.platform.isTizen) {
+		webapis.avplay.play();
+	} else if (TV.platform.isSamsung) {
 		this.el.Resume();
 	} else if (TV.platform.isLG || TV.platform.isWebOs || TV.platform.isPhilips) {
 		this.el.play(1);
@@ -346,9 +395,12 @@ TV.PlayerWrapper.prototype.resume = function() {
 };
 
 TV.PlayerWrapper.prototype.stop = function() {
-	if (TV.platform.isSamsung) {
+	if (TV.platform.isTizen) {
+		TV.log('Tizen stop');
+		webapis.avplay.stop();
+		this.dummy_start = null;
+	} else if (TV.platform.isSamsung) {
 		this.el.Stop();
-		if (TV.platform.isTizen) this.dummy_start = null;
 	} else if (TV.platform.isLG || TV.platform.isWebOs || TV.platform.isPhilips) {
 		this.el.stop();
 	} else if (TV.platform.isBrowser) {
@@ -359,10 +411,14 @@ TV.PlayerWrapper.prototype.stop = function() {
 
 TV.PlayerWrapper.prototype.seek = function(seek_time) {
 	if (TV.PlayerWrapper.server_seek  && TV.PlayerWrapper.server_seek(this, seek_time) === false) return;
-	if (TV.platform.isSamsung) {
+	if (TV.platform.isTizen) {
+		//if (TV.platform.isTizen && seek_time >= webapis.avplay.getDuration()) seek_time -= 1000;
+		TV.log('Tizen seek', seek_time);
+		webapis.avplay.seekTo(seek_time);
+	} else if (TV.platform.isSamsung) {
 		var val = seek_time - this._curr_time;
 		if (val > 0) {
-			if (seek_time >= this.el.GetDuration()) val -= 1000;
+			if (TV.platform.isSamsung && seek_time >= this.el.GetDuration()) val -= 1000;
 			this.el.JumpForward(val/1000);
 		} else {
 			this.el.JumpBackward(Math.abs(val/1000));
@@ -427,8 +483,11 @@ TV.PlayerWrapper.prototype.clear = function() {
 	if (this._timer) clearInterval(this._timer);
 	this._timer = null;
 	this.stop();
-	var listeners;
-	if (TV.platform.isSamsung) {
+	var listeners = [];
+	if (TV.platform.isTizen) {
+		webapis.avplay.close();
+		TV.hide(this.el);
+	} else if (TV.platform.isSamsung) {
 		document.body.style.background = this._body_background;
 		listeners = ['OnCurrentPlayTime','OnStreamInfoReady','OnBufferingProgress','OnBufferingStart','OnBufferingComplete','OnConnectionFailed','OnRenderError','OnNetworkDisconnected','OnStreamNotFound','OnServerError'];
 	} else if (TV.platform.isLG || TV.platform.isWebOs) {

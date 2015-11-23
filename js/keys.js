@@ -1,5 +1,68 @@
 TV.keys = {};
-if (TV.platform.isSamsung) {
+if (TV.platform.isTizen) {
+	TV.keys.left = 37;
+	TV.keys.right = 39;
+	TV.keys.up = 38;
+	TV.keys.down = 40;
+	TV.keys.enter = 13;
+	TV.keys.exit = 10182;
+	TV.keys.return = 10009;
+	window.addEventListener('load', function() {
+		var map_keys = {};
+		tizen.tvinputdevice.getSupportedKeys().forEach(function(key) {
+			map_keys[key.name] = key.code;
+		});
+		var register = [
+			'ColorF0Red',
+			'ColorF1Green',
+			'ColorF2Yellow',
+			'ColorF3Blue',
+			'MediaPlay',
+			'MediaPause',
+			'MediaStop',
+			'MediaRewind',
+			'MediaFastForward',
+			'Tools',
+			'1',
+			'2',
+			'3',
+			'4',
+			'5',
+			'6',
+			'7',
+			'8',
+			'9',
+			'0',
+			'ChannelUp',
+			'ChannelDown'
+		];
+		register.forEach(function(name) {
+			tizen.tvinputdevice.registerKey(name);
+		});
+		TV.keys.green = map_keys['ColorF1Green'];
+		TV.keys.red = map_keys['ColorF0Red'];
+		TV.keys.yellow = map_keys['ColorF2Yellow'];
+		TV.keys.blue = map_keys['ColorF3Blue'];
+		TV.keys.play = map_keys['MediaPlay'];
+		TV.keys.pause = map_keys['MediaPause'];
+		TV.keys.stop = map_keys['MediaStop'];
+		TV.keys.rw = map_keys['MediaRewind'];
+		TV.keys.ff = map_keys['MediaFastForward'];
+		TV.keys.tools = map_keys['Tools'];
+		TV.keys.num_1 = map_keys['1'];
+		TV.keys.num_2 = map_keys['2'];
+		TV.keys.num_3 = map_keys['3'];
+		TV.keys.num_4 = map_keys['4'];
+		TV.keys.num_5 = map_keys['5'];
+		TV.keys.num_6 = map_keys['6'];
+		TV.keys.num_7 = map_keys['7'];
+		TV.keys.num_8 = map_keys['8'];
+		TV.keys.num_9 = map_keys['9'];
+		TV.keys.num_0 = map_keys['0'];
+		TV.keys.page_up = map_keys['ChannelUp'];
+		TV.keys.page_down = map_keys['ChannelDown'];
+	}, 1000);
+} else if (TV.platform.isSamsung) {
 	if (!TV.key_api) TV.key_api = new Common.API.TVKeyValue();
 	TV.keys.exit = TV.key_api.KEY_EXIT;
 	TV.keys.left = TV.key_api.KEY_LEFT;
