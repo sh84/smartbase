@@ -291,7 +291,8 @@ TV.PlayerWrapper.prototype._getVideoPluginRect = function() {
             }
         );
 
-	    this.app_w = window.screen.availWidth;	
+	    //this.app_w = window.screen.width; // TODO Not worked
+		this.app_w = 1280;
 
 	} else if (window_plugin.GetScreenRect) {
 		rect = window_plugin.GetScreenRect();
@@ -363,17 +364,30 @@ TV.PlayerWrapper.prototype.play = function() {
     //TV.log('TV.PlayerWrapper.prototype.play');
 	if (TV.platform.isTizen) {
 		TV.log('Tizen open', this._getUrl());
-		webapis.avplay.open(this._getUrl());
-		TV.log('Tizen setDisplayRect', this._display_left, this._display_top, this._display_width, this._display_height);
-		// TODO: выставлять реальный setDisplayRect пересчитывая по размеру экрана
-		//webapis.avplay.setDisplayRect(this._display_left, this._display_top, this._display_width, this._height);
-		webapis.avplay.setDisplayRect(this._display_left * this.video_window_w / this.app_w, 
-									  this._display_top * this.video_window_w / this.app_w,
-                                      this._display_width * this.video_window_w / this.app_w,
-                                      this._display_height * this.video_window_w / this.app_w);
-		webapis.avplay.prepare();
+		try {
+			webapis.avplay.open(this._getUrl());
+			var ratio = this.video_window_w / this.app_w;
+			TV.log('Tizen setDisplayRect', this._display_left * ratio, this._display_top * ratio, this._display_width * ratio, this._display_height * ratio);
+			webapis.avplay.setDisplayRect(this._display_left * ratio, 
+										  this._display_top * ratio,
+					                      this._display_width * ratio,
+						                  this._display_height * ratio);
+		} catch (e) {
+			TV.log('Tizen open() and setDisplayRect() error:', e);
+		}
+
+		try {
+			webapis.avplay.prepare();
+		} catch (e) {
+			TV.log('Tizen prepare() error:', e);
+		}
+
 		TV.log('Tizen play');
-		webapis.avplay.play();
+		try {
+			webapis.avplay.play();
+		} catch (e) {
+			TV.log('Tizen play() error:', e);
+		}
 	} else if (TV.platform.isSamsung) {
         //TV.log('isSamsung play', this._getUrl());
 		this.el.Play(this._getUrl());
@@ -517,7 +531,11 @@ TV.PlayerWrapper.prototype.clear = function() {
 	this.stop();
 	var listeners = [];
 	if (TV.platform.isTizen) {
-		webapis.avplay.close();
+		try {
+			webapis.avplay.close();
+		} catch (e) {
+		    TV.log('Tizen close() error:', e);
+		}
 		TV.hide(this.el);
 	} else if (TV.platform.isSamsung) {
 		document.body.style.background = this._body_background;
