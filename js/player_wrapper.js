@@ -489,7 +489,10 @@ TV.PlayerWrapper.prototype.seek = function(seek_time) {
 };
 
 TV.PlayerWrapper.prototype.setScreenSaverON = function() {
-	if (TV.platform.isSamsung) {
+	if (TV.platform.isTizen) {
+		webapis.appcommon.setScreenSaver(1, function(){});
+		//webapis.appcommon.setScreenSaver(webapis.appcommon.AppCommonScreenSaverState.SCREEN_SAVER_ON);
+	} else if (TV.platform.isSamsung) {
 		TV.plugin_api.setOnScreenSaver();
 	} else if (TV.platform.isLG || TV.platform.isWebOs || TV.platform.isPhilips) {
 		window.NetCastSetScreenSaver && window.NetCastSetScreenSaver('enabled');
@@ -497,7 +500,10 @@ TV.PlayerWrapper.prototype.setScreenSaverON = function() {
 };
 
 TV.PlayerWrapper.prototype.setScreenSaverOff = function() {
-	if (TV.platform.isSamsung) {
+	if (TV.platform.isTizen) {
+		webapis.appcommon.setScreenSaver(0, function(){});
+		//webapis.appcommon.setScreenSaver(webapis.appcommon.AppCommonScreenSaverState.SCREEN_SAVER_OFF);
+	} else if (TV.platform.isSamsung) {
 		TV.plugin_api.setOffScreenSaver();
 	} else if (TV.platform.isLG || TV.platform.isWebOs || TV.platform.isPhilips) {
 		window.NetCastSetScreenSaver && window.NetCastSetScreenSaver('disabled');
