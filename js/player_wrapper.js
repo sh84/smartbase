@@ -157,9 +157,15 @@ TV.PlayerWrapper.prototype.attachCallbacks = function() {
 			}
 		}.bind(this);
 		// Прогресс проигрывания/буфферинга
-		this._timer = setInterval( function() {
+		var timer_fn = function() {
 			// Playing
 			if (this.el.playState == 1) {
+				TV.log('this._curr_time='+this._curr_time, this.el.playPosition, Math.abs(this._curr_time - this.el.playPosition)/this._curr_time);
+				if (this._curr_time && this._curr_time > 10000 && Math.abs(this._curr_time - this.el.playPosition)/this._curr_time > 1) {
+					TV.log('Too big playPosition ('+this.el.playPosition+'), retry');
+					setTimeout(timer_fn, 100);
+					return;
+				} 
 				if (this._trick_seek_inprogress) {
 					// Недавно был seek, нужно проверить, правильно ли мы перешли
 					// -1 - чтобы показать, что нужно проверить старый seek, а не делать новый
@@ -176,7 +182,8 @@ TV.PlayerWrapper.prototype.attachCallbacks = function() {
 				//TV.log('_timer this.el.playState == 4', this.el.playState, this.el.bufferingProgress);
 				this.onbuffering && this.onbuffering(this.el.bufferingProgress || 50);
 			}
-		}.bind(this), 500);
+		}.bind(this);
+		this._timer = setInterval(timer_fn , 500);
 	} else if (TV.platform.isLG || TV.platform.isWebOs) {
 		var info_ready = false;
 		this.el.onPlayStateChange = function() {
@@ -471,6 +478,7 @@ TV.PlayerWrapper.prototype.seek = function(seek_time) {
             this._trick_seek_position = seek_time;
             this._trick_seek_from = this.el.playPosition;
             this.el.seek(seek_time);
+            this._curr_time = seek_time;
             TV.log('Philips seek_from', this._trick_seek_from);
             return;
         } else if (this._trick_seek_inprogress && this.el.playPosition > 0) {
@@ -484,11 +492,12 @@ TV.PlayerWrapper.prototype.seek = function(seek_time) {
             }
 
             var trick_seek_diff = this.el.playPosition - this._trick_seek_position;
-            var correct_seek_position = Math.floor(this._trick_seek_position * this._trick_seek_position / this.el.playPosition);
             TV.log('Philips trick seek, trick_seek_diff=' + trick_seek_diff, 'playState='+this.el.playState);
             if (Math.abs(trick_seek_diff) > this._trick_seek_threshold) {
+            	var correct_seek_position = Math.floor(this._trick_seek_position * this._trick_seek_position / this.el.playPosition);
                 TV.log('Philips trick seek to ' + correct_seek_position + ' now pos is ' + this.el.playPosition + ' have to be ' + this._trick_seek_position);
                 this.el.seek(correct_seek_position);
+                this._curr_time = correct_seek_position;
                 this._trick_seek_inprogress = false;
                 return false;
             }

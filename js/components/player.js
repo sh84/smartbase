@@ -278,35 +278,22 @@ TVComponents.Player.prototype.onvideoprogress = function(time) {
 	if (this.state == 'stop') return;
 	if (this.state == 'play' && time == 4294966) return;
 	if (this.data.seek && !this._data_seek) {
-        TV.log('Auto seek to', this.data.seek, ' the state is', this.state);
+		TV.log('Auto seek to', this.data.seek, ' the state is', this.state);
 		this._data_seek = true;
-
-        if (TV.platform.isPhilips) {
-            // pause-sleep-seek позволяет избежать зависания при автоперемотке с начала ролика
-            this.pause();
-            setTimeout(function() {
-                TV.log('Timeout on auto seek. Now the state is', this.state);
-                this.seek(this.data.seek);
-            }.bind(this), 3000);
-            this.play();
-
-        }  if (TV.platform.isLG || TV.platform.isSamsung) {
-			// pause-sleep-seek позволяет избежать зависания при автоперемотке с начала ролика
+		// pause-sleep-seek позволяет избежать зависания при автоперемотке с начала ролика
+		setTimeout( function() {
 			this.pause();
-			setTimeout(function() {
+			setTimeout( function() {
 				TV.log('Timeout on auto seek. Now the state is', this.state);
 				this.seek(this.data.seek);
 				this.play();
-			}.bind(this), 1000);
-		} else {
-            this.seek(this.data.seek);
-        }
-
-		this.stateChange(this.state);
-
-		this.updateTimeline();
+			}.bind(this), TV.platform.isPhilips ? 500 : 1000);
+			this.stateChange(this.state);
+			this.updateTimeline();
+		}.bind(this), TV.platform.isPhilips ? 1000 : 0);
 		return;
 	}
+
 	this.curr_time = (this.data.base_time || 0) + time / 1000;
 	if (!this.isLive()) {
 		this.updateTimeline();
@@ -395,10 +382,11 @@ TVComponents.Player.prototype.stop = function() {
 };
 
 TVComponents.Player.prototype.seek = function(seek_time, show) {
-	TV.log('seek', 'allow_seek='+this.data.allow_seek, 'seek_time='+seek_time);
+	TV.log('seek', 'allow_seek='+this.data.allow_seek, 'seek_time='+seek_time, 'max_seek='+(this.data.max_seek || this.duration));
 	if (! this.data.allow_seek) return;
 	if (seek_time < 0) seek_time = 0;
-	if (seek_time > (this.data.max_seek || this.duration)) seek_time = this.data.max_seek || this.duration;
+	var max_seek = this.data.max_seek || this.duration;
+	if (max_seek && seek_time > max_seek) seek_time = max_seek;
 	if (this.buffering || seek_time == this.curr_time) return;
 	if (show) this.showSeek(seek_time);
 	this.video.seek(seek_time*1000);
