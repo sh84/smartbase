@@ -456,6 +456,27 @@ TVComponents.Slider.prototype.updateNavButtons = function() {
 	}
 };
 
+// Убираем фокус с кнопок листания
+TVComponents.Slider.prototype.onoutNavButtons = function() {
+    // достигнут левый край
+    if (this.start_position <= 0) {
+        this.buttons[this.id+'_nav_prev'] && this.buttons[this.id+'_nav_prev'].onmouseout();
+        this.buttons[this.id+'_sc_prev'] && this.buttons[this.id+'_sc_prev'].onmouseout();
+    } else {
+        this.buttons[this.id+'_nav_prev'] && this.buttons[this.id+'_nav_prev'].onmouseout();
+        this.buttons[this.id+'_sc_prev'] && this.buttons[this.id+'_sc_prev'].onmouseout();
+    }
+    // достигнут правый край
+    if (this.start_position + this.count >= this.data.length + this.start_offset * 2) {
+        this.buttons[this.id+'_nav_next'] && this.buttons[this.id+'_nav_next'].onmouseout();
+        this.buttons[this.id+'_sc_next'] && this.buttons[this.id+'_sc_next'].onmouseout();
+    } else {
+        this.buttons[this.id+'_nav_next'] && this.buttons[this.id+'_nav_next'].onmouseout();
+        this.buttons[this.id+'_sc_next'] && this.buttons[this.id+'_sc_next'].onmouseout();
+    }
+};
+
+
 TVComponents.Slider.prototype.btnAttachCallbacks = function(btn) {
 	btn.onclick = this.onButtonClick.bind(this);
 	btn.onhover = this.onButtonHover.bind(this);
@@ -469,6 +490,8 @@ TVComponents.Slider.prototype.onButtonHover = function(btn) {
 	// перемещаем start
 	this.buttons._start_btn = this.buttons._hover_btn;
 	if (this.onhover) this.onhover(btn.attributes.key, btn);
+	// Убираем фокус с кнопок листания
+	this.onoutNavButtons();
 };
 
 TVComponents.Slider.prototype.getCurrItemID = function() {
