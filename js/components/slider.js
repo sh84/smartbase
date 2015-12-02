@@ -242,7 +242,9 @@ TVComponents.Slider.prototype._getItem = function(index) {
 	return item;
 };
 
-TVComponents.Slider.prototype.oncursor = function(side) {
+TVComponents.Slider.prototype.oncursor = function(side, is_mouse) {
+	// Убираем фокус с кнопок листания если это не нажатие мышки по ним
+	if (!is_mouse) this.delNavButtonsHover();
 	// перехватываем нажатия влево и вправо (горизонтальный слайдер), вверх и вниз (вертикальный слайдер)
 	if (this.buttons._hover_btn && (!this.buttons._hover_btn[side] || this.movie_on_all)
 			&& (this.is_horizontal && (side == 'left' || side == 'right') || this.is_vertical && (side == 'up' || side == 'down'))) {
@@ -395,7 +397,8 @@ TVComponents.Slider.prototype._initScrollbarButtons = function() {
 			el.setAttribute('data-type', 'button');
 			el.setAttribute('data-id', this.id+'_'+selector.replace(/.*"slider_(.*?)".*/, '$1'));
 			new TVButton(el, this.buttons, this).onclick = function() {
-				if (this._movie(is_first) === false) return;
+				TV.addClass(el, TVButton.hover_class);
+				if (this._movie(is_first, true) === false) return;
 				this.setScrollbar();
 				var side;
 				if (is_first) {
@@ -403,7 +406,7 @@ TVComponents.Slider.prototype._initScrollbarButtons = function() {
 				} else {
 					side = this.is_horizontal ? 'right' : 'down';
 				}
-				TVComponent.prototype.oncursor.call(this, side);
+				TVComponent.prototype.oncursor.call(this, side, true);
 				this.buttons._hover_btn && TV.removeClass(this.buttons._hover_btn.el, TVButton.hover_class);
 			}.bind(this);
 		}
@@ -457,23 +460,11 @@ TVComponents.Slider.prototype.updateNavButtons = function() {
 };
 
 // Убираем фокус с кнопок листания
-TVComponents.Slider.prototype.onoutNavButtons = function() {
-    // достигнут левый край
-    if (this.start_position <= 0) {
-        this.buttons[this.id+'_nav_prev'] && this.buttons[this.id+'_nav_prev'].onmouseout();
-        this.buttons[this.id+'_sc_prev'] && this.buttons[this.id+'_sc_prev'].onmouseout();
-    } else {
-        this.buttons[this.id+'_nav_prev'] && this.buttons[this.id+'_nav_prev'].onmouseout();
-        this.buttons[this.id+'_sc_prev'] && this.buttons[this.id+'_sc_prev'].onmouseout();
-    }
-    // достигнут правый край
-    if (this.start_position + this.count >= this.data.length + this.start_offset * 2) {
-        this.buttons[this.id+'_nav_next'] && this.buttons[this.id+'_nav_next'].onmouseout();
-        this.buttons[this.id+'_sc_next'] && this.buttons[this.id+'_sc_next'].onmouseout();
-    } else {
-        this.buttons[this.id+'_nav_next'] && this.buttons[this.id+'_nav_next'].onmouseout();
-        this.buttons[this.id+'_sc_next'] && this.buttons[this.id+'_sc_next'].onmouseout();
-    }
+TVComponents.Slider.prototype.delNavButtonsHover = function() {
+	this.buttons[this.id+'_nav_prev'] && TV.removeClass(this.buttons[this.id+'_nav_prev'].el, TVButton.hover_class);
+	this.buttons[this.id+'_sc_prev'] && TV.removeClass(this.buttons[this.id+'_sc_prev'].el, TVButton.hover_class);
+	this.buttons[this.id+'_nav_next'] && TV.removeClass(this.buttons[this.id+'_nav_next'].el, TVButton.hover_class);
+	this.buttons[this.id+'_sc_next'] && TV.removeClass(this.buttons[this.id+'_sc_next'].el, TVButton.hover_class);
 };
 
 
@@ -491,7 +482,7 @@ TVComponents.Slider.prototype.onButtonHover = function(btn) {
 	this.buttons._start_btn = this.buttons._hover_btn;
 	if (this.onhover) this.onhover(btn.attributes.key, btn);
 	// Убираем фокус с кнопок листания
-	this.onoutNavButtons();
+	//this.onoutNavButtons();
 };
 
 TVComponents.Slider.prototype.getCurrItemID = function() {

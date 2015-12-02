@@ -21,9 +21,10 @@ TVComponents.ClassSlider.prototype.onready = function() {
 	this._setClasses();
 };
 
-TVComponents.ClassSlider.prototype._movie = function(is_first) {
+TVComponents.ClassSlider.prototype._movie = function(is_first, is_mouse) {
 	if (TVComponents.Slider.prototype._movie.call(this, is_first) === false) return false;
 	this._setClasses();
+	is_mouse && this.buttons._hover_btn && TV.removeClass(this.buttons._hover_btn.el, TVButton.hover_class);
 	return false;
 };
 
