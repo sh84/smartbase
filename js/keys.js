@@ -34,7 +34,10 @@ if (TV.platform.isTizen) {
 			'9',
 			'0',
 			'ChannelUp',
-			'ChannelDown'
+			'ChannelDown',
+			'VolumeUp',
+			'VolumeDown',
+			'VolumeMute'
 		];
 		register.forEach(function(name) {
 			tizen.tvinputdevice.registerKey(name);
@@ -61,6 +64,9 @@ if (TV.platform.isTizen) {
 		TV.keys.num_0 = map_keys['0'];
 		TV.keys.ch_next = map_keys['ChannelUp'];
 		TV.keys.ch_prev = map_keys['ChannelDown'];
+		TV.keys.vol_up = map_keys['VolumeUp'];
+		TV.keys.vol_down = map_keys['VolumeDown'];
+		TV.keys.vol_mute = map_keys['VolumeMute'];
 	}, 1000);
 } else if (TV.platform.isSamsung) {
 	if (!TV.key_api) TV.key_api = new Common.API.TVKeyValue();
@@ -93,6 +99,9 @@ if (TV.platform.isTizen) {
 	TV.keys.num_0 = TV.key_api.KEY_0;
 	TV.keys.ch_next = TV.key_api.KEY_CH_UP;
 	TV.keys.ch_prev = TV.key_api.KEY_CH_DOWN;
+	TV.keys.vol_up = TV.key_api.KEY_VOL_UP;
+	TV.keys.vol_down = TV.key_api.KEY_VOL_DOWN;
+	TV.keys.vol_mute = TV.key_api.KEY_MUTE;
 } else if (TV.platform.isLG || TV.platform.isWebOs) {
 	TV.keys.exit = -1;
 	TV.keys.left = 37;
@@ -130,6 +139,9 @@ if (TV.platform.isTizen) {
 		TV.keys.ch_next = 70;
 		TV.keys.ch_prev = 71;
 	}
+	TV.keys.vol_up = -1; 		// webOS и NetCast не дают работать с 
+	TV.keys.vol_down = -1;	// кнопками громкости
+	TV.keys.vol_mute = -1;
 } else if (TV.platform.isPhilips) {
 	TV.keys.exit = -1;
 	TV.keys.left = VK_LEFT;
@@ -160,6 +172,9 @@ if (TV.platform.isTizen) {
 	TV.keys.num_0 = VK_0;
 	TV.keys.ch_next = VK_PAGE_UP;
 	TV.keys.ch_prev = VK_PAGE_DOWN;
+	TV.keys.vol_up = -1; 		// Филипс не даёт работать с
+	TV.keys.vol_down = -1;	// кнопками громкости
+	TV.keys.vol_mute = -1;
 } else if (TV.platform.isBrowser) {
 	TV.keys.exit = 27;   //esc
 	TV.keys.left = 37;
@@ -190,4 +205,7 @@ if (TV.platform.isTizen) {
 	TV.keys.num_0 = 96;
 	TV.keys.ch_next = 33;
 	TV.keys.ch_prev = 34;
+	TV.keys.vol_up = 107; // Num+
+	TV.keys.vol_down = 109; // Num-
+	TV.keys.vol_mute = 111; // Num/
 };

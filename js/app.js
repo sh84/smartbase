@@ -362,15 +362,16 @@ TV.prototype.onSamsungShow = function() {
 TV.prototype.isSupportVolumeActions = function() {
 	//samsung
 	var el = TV.el('pluginAudio');
-	if (el && el.SetVolumeWithKey)
-		return true;
+	if (el && el.SetVolumeWithKey) return true;
+	
+	//tizen
+	if (TV.platform.isTizen) return true;
 
 	//webos
-	if (typeof (webOS) != "undefined" && webOS.service)
-		return true;
-
+	if (typeof (webOS) != "undefined" && webOS.service)	return true;
+	
 	return false;
-}
+};
 
 TV.prototype.setVolumeUp = function() {
 	//samsung
@@ -380,56 +381,90 @@ TV.prototype.setVolumeUp = function() {
 		return;
 	};
 
+	//tizen
+	if (TV.platform.isTizen) {
+		tizen.tvaudiocontrol.setVolumeUp();
+		return;
+	}
+
 	//webos
-	if (typeof (webOS) != "undefined"){
+	if (typeof (webOS) != "undefined") {
 		webOS.service.request("luna://com.webos.audio", {
-    		method: "volumeUp",
-    		onComplete: function (inResponse) {
-        		var isSucceeded = inResponse.returnValue;
- 
-        		if (isSucceeded){
+			method : "volumeUp",
+			onComplete : function(response) {
+				if (response.returnValue) {
 					return;
-        		} else {
-            		console.log("Failed to increase volume by 1.");
-            		return;
-        		}
-    		}
+				} else {
+					console.log("Failed to increase volume by 1.");
+					return;
+				}
+			}
 		});
 	};
-
 };
 
 TV.prototype.setVolumeDown = function() {
 	//samsung
-    var el = TV.el('pluginAudio');
-    if (el) {
-        el.SetVolumeWithKey(1);
-    };
+	var el = TV.el('pluginAudio');
+	if (el) {
+		el.SetVolumeWithKey(1);
+		return;
+	};
 
-    //webos
-    if (typeof (webOS) != "undefined"){
-        webOS.service.request("luna://com.webos.audio", {
-            method: "volumeDown",
-            onComplete: function (inResponse) {
-                var isSucceeded = inResponse.returnValue;
- 
-                if (isSucceeded){
-                    return;
-                } else {
-                    console.log("Failed to decrease volume by 1.");
-                    return;
-                }
-            }
-        });
-    };
-
+	//tizen
+	if (TV.platform.isTizen) {
+		tizen.tvaudiocontrol.setVolumeDown();
+		return;
+	}
+	
+	//webos
+	if (typeof (webOS) != "undefined") {
+		webOS.service.request("luna://com.webos.audio", {
+			method : "volumeDown",
+			onComplete : function(response) {
+				if (response.returnValue) {
+					return;
+				} else {
+					console.log("Failed to decrease volume by 1.");
+					return;
+				}
+			}
+		});
+	};
 };
 
 TV.prototype.getVolume = function() {
 	//samsung
-    var el = TV.el('pluginAudio');
-    if (el) {
+	var el = TV.el('pluginAudio');
+	if (el) {
 		return el.GetVolume();
-    }
+	}
+	
+	//tizen
+	if (TV.platform.isTizen) {
+		return tizen.tvaudiocontrol.getVolume();
+	}
+	
 	return undefined;
+};
+
+TV.prototype.setMute = function() {
+	//samsung
+	var el = TV.el('pluginAudio');
+	if (el) {
+		if (el.GetSystemMute()) {
+			return el.SetSystemMute(0);
+		} else {
+			return el.SetSystemMute(1);
+		}
+	}
+
+	//tizen
+	if (TV.platform.isTizen) {
+		if (tizen.tvaudiocontrol.isMute()) {
+			return tizen.tvaudiocontrol.setMute(false);
+		} else {
+			return tizen.tvaudiocontrol.setMute(true);
+		}
+	}
 };
