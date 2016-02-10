@@ -91,8 +91,8 @@ TVButton.initAll = function(page, start_btn_id) {
 	}.bind(this)).map(function(comp) {
 		// если start_btn_id в форме 'id1.id2, трактуем это как id1 компонента и id2 кнопки этого компонента
 		var comp_start_btn_id = null;
-		if (start_btn_id && start_btn_id.indexOf(el._attributes.id+'.') === 0) {
-			comp_start_btn_id = start_btn_id.replace(el._attributes.id+'.', '');
+		if (start_btn_id && start_btn_id.indexOf(comp.attributes.id+'.') === 0) {
+			comp_start_btn_id = start_btn_id.replace(comp.attributes.id+'.', '');
 			start_btn_id_replaced = start_btn_id.replace('.'+comp_start_btn_id, '');
 		}
 		comp.init(comp_start_btn_id);
