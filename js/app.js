@@ -239,7 +239,7 @@ TV.prototype.renderFooter = function() {
 	['red', 'yellow', 'green', 'blue', 'return'].forEach(function(key) {
 		var el = TV.el('[data-type="footer-'+key+'"]', this.el),
 			allow_on_popup = this.curr_page['key_'+key+'_on_popup'] && this.curr_page['key_'+key+'_on_popup'] !== 'false' ? true : false;
-
+		
 		if (el && (!this.curr_popup || allow_on_popup || key == 'return')) {
 			//el.setAttribute('data-type', 'button');
 			var btn = new TVButton(el, this._footer_btns);
@@ -247,6 +247,9 @@ TV.prototype.renderFooter = function() {
 				curr_btn.resetAct();
 				this.onKey({keyCode: TV.keys[key]});
 			}.bind(this);
+			TV.show(el);
+		} else {
+			TV.hide(el);
 		}
 	}.bind(this));
 };
