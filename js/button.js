@@ -1,3 +1,4 @@
+/* global TV, TVPage, TVPopup, TVComponents, TVComponent */
 function TVButton(el, adjacent_buttons, parent) {
 	this.el = el;
 	if (!el._attributes) TV.setElementAttributes(el);
@@ -47,22 +48,29 @@ TVButton.disabled_class = 'disabled';  // класс заблокированн�
 TVButton.pressed_class = 'pressed';    // класс нажатого элемента
 
 TVButton.initAll = function(page, start_btn_id) {
-	var start_btn_id_replaced = start_btn_id;
 	TVButton.clearAll(page);
-	TVButton._initButtons(page.buttons);
+	TVButton.initButtonsAndComponents(page, start_btn_id);
+};
 
+TVButton.initButtonsAndComponents = function(obj, start_btn_id) {
+	var start_btn_id_replaced = start_btn_id;
+	TVButton._initButtons(obj.buttons);
+	var root_el = obj instanceof TVPage ? null : obj.el;
+	var parent = obj instanceof TVPage || obj instanceof TVPopup ? null : obj;
+	var is_hover = parent && obj.isHover();
 	// ищем кнопки
-	var buttons_els = TV.find('[data-type="button"]', page instanceof TVPage ? null : page.el);
+	var buttons_els = TV.find('[data-type="button"]', root_el);
 	
 	// ищем компоненты
 	var component_el, components_els = [], 
-		all_components_els = TV.find('[data-type="component"]', page instanceof TVPage ? null : page.el);
+		all_components_els = TV.find('[data-type="component"]', root_el);
 	while (component_el = all_components_els.shift()) {
 		components_els.push(component_el);
 		// ещем компоненты в компонентах и исключаем их из общего списка
+		var i, k;
 		var els_in = TV.find('[data-type="component"]', component_el);
-		for (var i=0; i < els_in.length; i++) {
-			for (var k=0; k < all_components_els.length; k++) {
+		for (i=0; i < els_in.length; i++) {
+			for (k=0; k < all_components_els.length; k++) {
 				if (els_in[i] == all_components_els[k]) {
 					all_components_els.splice(k, 1);
 					break;
@@ -71,8 +79,8 @@ TVButton.initAll = function(page, start_btn_id) {
 		}
 		// ещем кнопки в компонентах и исключаем их из общего списка
 		els_in = TV.find('[data-type="button"]', component_el);
-		for (var i=0; i < els_in.length; i++) {
-			for (var k=0; k < buttons_els.length; k++) {
+		for (i=0; i < els_in.length; i++) {
+			for (k=0; k < buttons_els.length; k++) {
 				if (els_in[i] == buttons_els[k]) {
 					buttons_els.splice(k, 1);
 					break;
@@ -83,12 +91,15 @@ TVButton.initAll = function(page, start_btn_id) {
 	
 	// инициализируем компоненты
 	components_els.map(function(el) {
-		if (!el._attributes.id) throw 'Not defined id for component '+(el.outerHTML||el.innerHTML);
+		if (!el._attributes.id) 
+			throw new Error('Not defined id for component '+(el.outerHTML||el.innerHTML));
 		var cl_name = el._attributes['class'];
-		var cl = cl_name ? (TVComponents[cl_name] || window[cl_name]) : null;
-		if (cl && typeof(cl) != 'function') throw 'Not defined TVComponents.'+cl_name+' or '+cl_name+' class for component '+el._attributes.id;
-		return cl ? new cl(el, page.buttons, null, cl_name) : new TVComponent(el, page.buttons);
-	}.bind(this)).map(function(comp) {
+		var cl = cl_name ? TVComponents[cl_name] || window[cl_name] : null;
+		if (cl && typeof cl != 'function') 
+			throw new Error('Not defined TVComponents.'+cl_name+' or '+cl_name+' class for component '+el._attributes.id);
+		// el, adjacent_buttons, parent, class_name
+		return cl ? new cl(el, obj.buttons, parent, cl_name) : new TVComponent(el, obj.buttons, parent);
+	}).map(function(comp) {
 		// если start_btn_id в форме 'id1.id2, трактуем это как id1 компонента и id2 кнопки этого компонента
 		var comp_start_btn_id = null;
 		if (start_btn_id && start_btn_id.indexOf(comp.attributes.id+'.') === 0) {
@@ -96,58 +107,87 @@ TVButton.initAll = function(page, start_btn_id) {
 			start_btn_id_replaced = start_btn_id.replace('.'+comp_start_btn_id, '');
 		}
 		comp.init(comp_start_btn_id);
-	}.bind(this));
+	});
 
 	// инициализируем кнопки
 	buttons_els.map(function(el) {
-		if (!el._attributes.id) throw 'Not defined id for button '+(el.outerHTML||el.innerHTML);
-		new TVButton(el, page.buttons);
+		if (!el._attributes.id) 
+			throw new Error('Not defined id for button '+(el.outerHTML||el.innerHTML));
+		new TVButton(el, obj.buttons, parent);
 	});
+
+	if (Object.keys(obj.buttons).length == 0) return;
 
 	// проверяем что нет ссылок на несуществующие кнопки,
 	// ищем стартовую и активную кнопку
 	// блокируем выключенные кнопки
 	var first_btn;
-	for (var id in page.buttons) {
-		var btn = page.buttons[id];
-		if (btn.attributes.start && !btn.attributes.disabled && !btn.disabled) page.buttons._start_btn = btn;
-		if (btn.attributes.selected && !btn.attributes.disabled && !btn.disabled) page.buttons._act_btn = btn;
-		if (btn.up && !page.buttons[btn.up]) throw 'Not existent up for '+id;
-		if (btn.right && !page.buttons[btn.right]) throw 'Not existent right for '+id;
-		if (btn.down && !page.buttons[btn.down]) throw 'Not existent down for '+id;
-		if (btn.left && !page.buttons[btn.left]) throw 'Not existent left for '+id;
+	for (var id in obj.buttons) {
+		var btn = obj.buttons[id];
+		if (btn.attributes.start && !btn.attributes.disabled && !btn.disabled) 
+			obj.buttons._start_btn = btn;
+		if (btn.attributes.selected && !btn.attributes.disabled && !btn.disabled) 
+			obj.buttons._act_btn = btn;
+		if (btn.up && !obj.buttons[btn.up] && btn.up != 'out') 
+			throw new Error('Not existent up for '+id);
+		if (btn.right && !obj.buttons[btn.right] && btn.right != 'out') 
+			throw new Error('Not existent right for '+id);
+		if (btn.down && !obj.buttons[btn.down] && btn.down != 'out') 
+			throw new Error('Not existent down for '+id);
+		if (btn.left && !obj.buttons[btn.left] && btn.left != 'out') 
+			throw new Error('Not existent left for '+id);
 		if (btn.attributes.disabled) btn.disable();
 		if (!first_btn && !btn.disabled) first_btn = btn;
 	}
-	
-	// если передан start_btn - стартуем с него
-	if (start_btn_id_replaced) {
-		page.buttons._start_btn = page.buttons[start_btn_id_replaced];
-		if (!page.buttons._start_btn) throw 'Not existent start btn '+start_btn_id_replaced+' on page render';
-		if (page.buttons._start_btn.attributes.disabled) page.buttons._start_btn = null;
-	}
-	
-	// если перед рендеренгом уже были стартовая и активная кнопки - их и используем
-	if (!page.buttons._start_btn) {
-		for (var id in TV._hover_btns) {
-			if (TV._hover_btns[id]+TV._render_ttl < TV._time) delete TV._hover_btns[id];
-			if (TV._hover_btns[id] && page.buttons[id] && !page.buttons[id].disabled) page.buttons._start_btn = page.buttons[id];
+
+	if (parent) {
+		// в зависимости от наличия кнопок выключаем или выключаем компонент
+		if (first_btn) {
+			obj.enable();
+		} else {
+			obj.disable();
+			// переводим с компонента курсор, если он был активен
+			if (is_hover) {
+				obj.adjacent_buttons._start_btn && obj.adjacent_buttons._start_btn.onmouseover();
+				is_hover = false;
+			}
 		}
 	}
-	if (!page.buttons._act_btn) {
+	
+	// если передан start_btn - стартуем с него
+	if (first_btn && start_btn_id_replaced) {
+		obj.buttons._start_btn = obj.buttons[start_btn_id_replaced];
+		if (!obj.buttons._start_btn) 
+			throw new Error('Not existent start btn '+start_btn_id_replaced+' on '+obj.id+' render');
+		if (obj.buttons._start_btn.attributes.disabled) obj.buttons._start_btn = null;
+	}
+
+	// если компонент с data-selected и у его кнопок нет _act_btn, то наводим _act_btn на первую кнопку
+	if (parent && obj.attributes.selected && !obj.buttons._act_btn) 
+		obj.buttons._act_btn = first_btn;
+	
+	// если перед рендеренгом уже были стартовая и активная кнопки - их и используем
+	if (!obj.buttons._start_btn) {
+		for (var id in TV._hover_btns) {
+			if (TV._hover_btns[id]+TV._render_ttl < TV._time) delete TV._hover_btns[id];
+			if (TV._hover_btns[id] && obj.buttons[id] && !obj.buttons[id].disabled) 
+				obj.buttons._start_btn = obj.buttons[id];
+		}
+	}
+	if (!obj.buttons._act_btn) {
 		for (var id in TV._selected_btns) {
 			if (TV._selected_btns[id]+TV._render_ttl < TV._time) delete TV._selected_btns[id];
-			if (TV._selected_btns[id] && page.buttons[id] && !page.buttons[id].disabled) page.buttons._act_btn = page.buttons[id];
+			if (TV._selected_btns[id] && obj.buttons[id] && !obj.buttons[id].disabled) obj.buttons._act_btn = obj.buttons[id];
 		}
 	}
 
 	// если стартовой кнопки нет - считаем такой первую добавленную
-	if (!page.buttons._start_btn && first_btn) page.buttons._start_btn = first_btn;
+	if (!obj.buttons._start_btn && first_btn) obj.buttons._start_btn = first_btn;
 
 	// на активную кнопку добавляем класс
-	if (page.buttons._act_btn) TV.addClass(page.buttons._act_btn.el, TVButton.act_class);
+	if (obj.buttons._act_btn) TV.addClass(obj.buttons._act_btn.el, TVButton.act_class);
 	// на стартовую кнопку устанавливаем курсор
-	if (page.buttons._start_btn) page.buttons._start_btn.onmouseover();
+	if ((!parent || is_hover) && obj.buttons._start_btn) obj.buttons._start_btn.onmouseover();
 };
 
 TVButton._initButtons = function(buttons) {

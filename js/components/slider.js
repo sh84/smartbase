@@ -146,39 +146,15 @@ TVComponents.Slider.prototype._addElement = function(item, is_first) {
 	return el;
 };
 
-TVComponents.Slider.prototype._makeComponents = function(root_el, root_btn) {
-	// инициализируем все найденные кнопки
-	var buttons = TV.find('[data-type="button"]', root_el);
-	for (var i=0; i < buttons.length; i++) {
-		var el = buttons[i];
-		if (!el._attributes.id) throw 'Not defined id for button '+(el.outerHTML||el.innerHTML);
-		new TVButton(el, root_btn.buttons, root_btn);
-	}
-	
-	// инициализируем все найденные компоненты
-	var components = TV.find('[data-type="component"]', root_el);
-	components.map(function(el) {
-		if (!el._attributes.id) throw 'Not defined id for component '+(el.outerHTML||el.innerHTML);
-		var cl_name = el._attributes['class'];
-		var cl = cl_name ? (TVComponents[cl_name] || window[cl_name]) : null;
-		if (cl && typeof(cl) != 'function') throw 'Not defined TVComponents.'+cl_name+' or '+cl_name+' class for component '+el._attributes.id;
-		return cl ? new cl(el, root_btn.buttons, root_btn, cl_name) : new TVComponent(el, root_btn.buttons, root_btn);
-	}.bind(this)).map(function(comp) {
-		comp.init();
-	});
-	
-	var first_btn;
-	for (var id in root_btn.buttons) {
-		var btn = root_btn.buttons[id];
+TVComponents.Slider.prototype._makeComponents = function(obj) {
+	TVButton.initButtonsAndComponents(obj);
+	for (var id in obj.buttons) {
+		var btn = obj.buttons[id];
 		btn.onclick = function(a, b) {
 			if (this.onclick) this.onclick(a, b);
 		}.bind(this);
-		if (btn.attributes.disabled) btn.disable();
-		if (btn.attributes.start && !btn.attributes.disabled && !btn.disabled) root_btn.buttons._start_btn = btn;
-		if (!first_btn && !btn.disabled) first_btn = btn;
 	}
-	if (!root_btn.buttons._start_btn && first_btn) root_btn.buttons._start_btn = first_btn;
-	return !!first_btn;
+	return Object.keys(obj.buttons).length > 0;
 };
 
 // создать кнопку на существуещем html-элементе следующим за текущей последней кнопкой
@@ -218,8 +194,8 @@ TVComponents.Slider.prototype._makeBtn = function(el, is_first) {
 	this.btnAttachCallbacks(btn);
 	
 	// если внутри кнопки-компонента есть другие компоненты - инициализируем их
-	if (!this._makeComponents(el, btn)) {
-		// если компонент нет - клик должен раьботать как у button-а
+	if (!this._makeComponents(btn)) {
+		// если компонент нет - клик должен работать как у button-а
 		btn.el.onclick = btn.onmouseclick.bind(btn);
 		btn.onenter = btn.onmouseclick.bind(btn);
 	}
