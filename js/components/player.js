@@ -15,6 +15,7 @@ TVComponents.Player = function(el, adjacent_buttons, parent, class_name) {
 	this.buffering = false;	   // признак буферизации
 	this.duration = null;	   // длительность видео в секундах
 	this.onstatechange = null; // колбэк изменения состояния проигрывания
+	this.onautoseek = null;    // колбэк выполнения автосика
 	
 	this.autostart = this.attributes['autostart'] && this.attributes['autostart'] != 'false';
 	this.seek_show_time = this.attributes['seek_show_time'] ? this.attributes['seek_show_time']*1 : 1000;  // время отображения перемотки
@@ -280,6 +281,7 @@ TVComponents.Player.prototype.onvideoprogress = function(time) {
 	if (this.data.seek && !this._data_seek) {
 		TV.log('Auto seek to', this.data.seek, ' the state is', this.state);
 		this._data_seek = true;
+		
 		// pause-sleep-seek позволяет избежать зависания при автоперемотке с начала ролика
 		setTimeout( function() {
 			this.pause();
@@ -287,6 +289,7 @@ TVComponents.Player.prototype.onvideoprogress = function(time) {
 				TV.log('Timeout on auto seek. Now the state is', this.state);
 				this.seek(this.data.seek);
 				this.play();
+				this.onautoseek && this.onautoseek();
 			}.bind(this), TV.platform.isPhilips ? 500 : 1000);
 			this.stateChange(this.state);
 			this.updateTimeline();
