@@ -177,14 +177,14 @@ TV.prototype.show = function() {
 	}
 
 	if (this.load_data_callback) {
+		// отрисуем главный экран без данных
+		this.render(null, true);
 		// надо дождаться данных
 		this.load_data_callback(function() {
 			this.load_data_callback = null; // вызываем только один раз
 			this.preinit();
 			this.render();
 		}.bind(this));
-		// отрисуем главный экран без данных
-		this.render(null, true);
 	} else {
 		this.preinit();
 		this.render();
