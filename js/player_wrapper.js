@@ -128,6 +128,8 @@ TV.PlayerWrapper.prototype.attachCallbacks = function() {
 				break;
 			case 6:
 				// error
+				var error = 'Playback error';
+				this.onerror && this.onerror(error);
 				break;
 			case 1:
 				// playing
@@ -165,7 +167,7 @@ TV.PlayerWrapper.prototype.attachCallbacks = function() {
 					TV.log('Too big playPosition ('+this.el.playPosition+'), retry');
 					setTimeout(timer_fn, 100);
 					return;
-				} 
+				}
 				if (this._trick_seek_inprogress) {
 					// Недавно был seek, нужно проверить, правильно ли мы перешли
 					// -1 - чтобы показать, что нужно проверить старый seek, а не делать новый

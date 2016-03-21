@@ -16,13 +16,14 @@ TVComponents.Player = function(el, adjacent_buttons, parent, class_name) {
 	this.duration = null;	   // длительность видео в секундах
 	this.onstatechange = null; // колбэк изменения состояния проигрывания
 	this.onautoseek = null;    // колбэк выполнения автосика
-	
+	this.onerror = null;       // колбэк возникновения ошибки
+
 	this.autostart = this.attributes['autostart'] && this.attributes['autostart'] != 'false';
 	this.seek_show_time = this.attributes['seek_show_time'] ? this.attributes['seek_show_time']*1 : 1000;  // время отображения перемотки
 	this.inactive_time = this.attributes['inactive_time'] ? this.attributes['inactive_time']*1 : 3000;     // время бездействия до скрытия панели
 	this.inactive_without_action = this.attributes['inactive_without_action'] && this.attributes['inactive_without_action'] != "false"; // обрабатывать кнопки и при скрытой панели
 	this.hide_panel = this.attributes['hide_panel'];
-	
+
 	this._stop_after_buffering = false;	// вызывать stop после буферизации
 	this._play_after_buffering = false;	// вызывать play после буферизации
 	this._show_seek = null;             // признак отображения перемотки (время начала показа)
@@ -278,6 +279,7 @@ TVComponents.Player.prototype.onvideoprogress = function(time) {
 	if (this._show_seek) this.hideSeek();
 	if (this.state == 'stop') return;
 	if (this.state == 'play' && time == 4294966) return;
+	TV.hide('[data-id="player_error"]', this.el);
 	if (this.data.seek && !this._data_seek) {
 		TV.log('Auto seek to', this.data.seek, ' the state is', this.state);
 		this._data_seek = true;
@@ -312,14 +314,17 @@ TVComponents.Player.prototype.onvideoprogress = function(time) {
 
 // ошибка при проигрывании
 TVComponents.Player.prototype.onvideoerror = function(error) {
-	TV.log('onvideoerror', error);
+	this.error = error || 'Ошибка воспроизведения';
+	TV.log('onvideoerror', this.error);
+	var err_time = this.curr_time;
 	if (!TV.el('[data-id="player_error"]', this.el)) return;
 	TV.show('[data-id="player_error"]', this.el);
-	TV.setHTML('[data-id="player_error"]', error || 'Ошибка', this.el);
+	TV.setHTML('[data-id="player_error"]', this.getErrorTemplateHtml(this.error) || this.error, this.el);
 	TV.hide('[data-id="player_loader"]', this.el);
 	TV.removeClass(this.el, 'player_buffering');
 	if (this.state != 'stop') this.stop();
 	this.stopInactive();
+	this.onerror && this.onerror(this.error, err_time);
 };
 
 TVComponents.Player.prototype.play = function() {
@@ -464,4 +469,11 @@ TVComponents.Player.prototype.stopInactive = function() {
 	TV.log('stopInactive and show panel');
 	TV.removeClass('[data-id="player_panel"]', TVComponents.Player.hidden_panel_class, this.el);
 	this._hidden_panel = false;
+};
+
+TVComponents.Player.prototype.getErrorTemplateHtml = function() {
+	var name = (TV.app.curr_popup) ? TV.app.curr_popup.name : TV.app.curr_page.name;
+	var ejs_path = 'text#' + name + '.';
+	ejs_path += TV.app.ejs[ejs_path + this.id] ? this.id : 'common_player_error';
+	return TV.app.ejs[ejs_path] ? TV.app.ejs[ejs_path](this) : null;
 };
