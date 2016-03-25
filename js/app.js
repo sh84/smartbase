@@ -247,7 +247,7 @@ TV.prototype.renderFooter = function() {
 				curr_btn.resetAct();
 				this.onKey({keyCode: TV.keys[key]});
 			}.bind(this);
-			TV.show(el);
+			this.curr_popup && this.curr_popup.buttons.close && key == 'return' ? TV.hide(el) : TV.show(el);
 		} else {
 			TV.hide(el);
 		}

@@ -25,6 +25,7 @@ TVPopup.prototype.render = function(start_btn_id) {
 	this.el.className = this.container_class;
 
 	TVButton.initAll(this, start_btn_id);
+	if (this.buttons.close) this.buttons.close.onclick = this.hide.bind(this);
 	if (this.onready) this.onready();
 };
 
