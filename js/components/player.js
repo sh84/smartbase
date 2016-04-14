@@ -72,9 +72,7 @@ TVComponents.Player.prototype.onready = function() {
 	this.buttons._act_btn = null;
 	
 	// устанавливаем плеер на нужную позицию и размер
-	var rect = TV.getRect(this.el),
-		wrap = TV.getRect(TV.el('body'));
-	this.video.setDisplayArea(rect.left - wrap.left, rect.top, rect.width, rect.height);
+	this.setDisplayArea();
 	
 	// стартуем
 	this.video.url = this.data.url;
@@ -386,6 +384,7 @@ TVComponents.Player.prototype.stop = function() {
 		this.curr_time = 0;
 		this.updateTimeline();
 		this.video.setScreenSaverON();
+		this.setDisplayArea();
 	}
 };
 
@@ -476,4 +475,11 @@ TVComponents.Player.prototype.getErrorTemplateHtml = function() {
 	var ejs_path = 'text#';
 	ejs_path += TV.app.ejs[ejs_path + name + '.' + this.id] ? name + '.' + this.id : 'common_player_error';
 	return TV.app.ejs[ejs_path] ? TV.app.ejs[ejs_path](this) : null;
+};
+
+
+TVComponents.Player.prototype.setDisplayArea = function() {
+	var rect = TV.getRect(this.el),
+		wrap = TV.getRect(TV.el('body'));
+	this.video.setDisplayArea(rect.left - wrap.left, rect.top, rect.width, rect.height);
 };
