@@ -473,7 +473,7 @@ TVComponents.Player.prototype.stopInactive = function() {
 
 TVComponents.Player.prototype.getErrorTemplateHtml = function() {
 	var name = (TV.app.curr_popup) ? TV.app.curr_popup.name : TV.app.curr_page.name;
-	var ejs_path = 'text#' + name + '.';
-	ejs_path += TV.app.ejs[ejs_path + this.id] ? this.id : 'common_player_error';
+	var ejs_path = 'text#';
+	ejs_path += TV.app.ejs[ejs_path + name + '.' + this.id] ? name + '.' + this.id : 'common_player_error';
 	return TV.app.ejs[ejs_path] ? TV.app.ejs[ejs_path](this) : null;
 };
