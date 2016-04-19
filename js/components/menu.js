@@ -3,6 +3,7 @@ TVComponents.Menu = function(el, adjacent_buttons, parent, class_name) {
 };
 TVComponents.Menu.prototype = Object.create(TVComponent.prototype);
 
-TVComponents.Menu.prototype.onButtonClick = function(btn) {
+TVComponents.Menu.prototype.onButtonClick = function(btn) {	
+	if (this.onclick) this.onclick(btn.id, btn);
 	TV.app.pages[btn.attributes.page_id].show();
 };
