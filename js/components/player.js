@@ -1,3 +1,4 @@
+/* global TV, TVPage, TVPopup, TVButton, TVComponents, TVComponent */
 TVComponents.Player = function(el, adjacent_buttons, parent, class_name) {
 	TVComponent.call(this, el, adjacent_buttons, parent, class_name);
 	this.data = {
@@ -17,6 +18,7 @@ TVComponents.Player = function(el, adjacent_buttons, parent, class_name) {
 	this.onstatechange = null; // колбэк изменения состояния проигрывания
 	this.onautoseek = null;    // колбэк выполнения автосика
 	this.onerror = null;       // колбэк возникновения ошибки
+	this.onprogress = null;    // колбэк позиции проигрывания 
 
 	this.autostart = this.attributes['autostart'] && this.attributes['autostart'] != 'false';
 	this.seek_show_time = this.attributes['seek_show_time'] ? this.attributes['seek_show_time']*1 : 1000;  // время отображения перемотки
@@ -84,7 +86,7 @@ TVComponents.Player.prototype.onready = function() {
 		this.buttons._act_btn = null; // разрешаем повторное нажатие
 		if (this.state == 'play') {
 			this.pause();
-		} else {
+		} else if (!this._seek_timer) {
 			this.play();
 		}
 	}.bind(this);
@@ -121,7 +123,7 @@ TVComponents.Player.prototype.onready = function() {
 
 		var strip_el = TV.el('[data-id="player_control_strip"]', this.buttons.timeline.el);
 		strip_el.onclick = function(e) {
-			var x = e.offsetX == undefined ? e.layerX : e.offsetX;
+			var x = typeof e.offsetX == 'undefined' ? e.layerX : e.offsetX;
 			this.seek(x / TV.getSize(strip_el).width * this.duration, true);
 			if (this.state != 'play') this.play();
 			e.stopPropagation();
@@ -220,6 +222,7 @@ TVComponents.Player.prototype.btnProcessSeek = function(direction) {
 	
 	if (this._seek_timer) clearTimeout(this._seek_timer);
 	this._seek_timer = setTimeout(function() {
+		this._seek_timer = null;
 		this.seek(this._where_to_seek);
 		this.hideSeek(true);
 		this.updateTimeline();
@@ -227,7 +230,6 @@ TVComponents.Player.prototype.btnProcessSeek = function(direction) {
 		this._where_to_seek = null;
 		this._seek_direction = null;
 		this._seek_step = null;
-		this._seek_timer = null;
 		TV.hide('[data-id="player_loader"]', this.el);
 	}.bind(this), 700);
 };
@@ -278,6 +280,7 @@ TVComponents.Player.prototype.onvideoprogress = function(time) {
 	if (this.state == 'stop') return;
 	if (this.state == 'play' && time == 4294966) return;
 	TV.hide('[data-id="player_error"]', this.el);
+	if (this.onprogress && this.onprogress(time / 1000) === false) return;
 	if (this.data.seek && !this._data_seek) {
 		TV.log('Auto seek to', this.data.seek, ' the state is', this.state);
 		this._data_seek = true;
@@ -357,7 +360,7 @@ TVComponents.Player.prototype.play = function() {
 
 TVComponents.Player.prototype.pause = function() {
 	TV.log('pause', this.data.allow_pause);
-	if (! this.data.allow_pause) return;
+	if (!this.data.allow_pause) return;
 	if (this.buffering) return;
 	this.stateChange('pause');
 	this.video.pause();
@@ -390,13 +393,13 @@ TVComponents.Player.prototype.stop = function() {
 
 TVComponents.Player.prototype.seek = function(seek_time, show) {
 	TV.log('seek', 'allow_seek='+this.data.allow_seek, 'seek_time='+seek_time, 'max_seek='+(this.data.max_seek || this.duration));
-	if (! this.data.allow_seek) return;
+	if (!this.data.allow_seek) return;
 	if (seek_time < 0) seek_time = 0;
 	var max_seek = this.data.max_seek || this.duration;
 	if (max_seek && seek_time > max_seek) seek_time = max_seek;
 	if (this.buffering || seek_time == this.curr_time) return;
 	if (show) this.showSeek(seek_time);
-	this.video.seek(seek_time*1000);
+	this.video.seek(Math.floor(seek_time*1000));
 	this.curr_time = seek_time;
 };
 
@@ -405,14 +408,15 @@ TVComponents.Player.prototype.showSeek = function(seek_time) {
 	this._show_seek = new Date()/1;
 	var el_seek = TV.el('[data-id="player_control_strip_seek"]', this.el);
 	var el_time = TV.el('[data-id="player_control_strip_time"]', this.el);
+	var seek_width, seek_left, time_left;
 	if (seek_time > this.curr_time) {
-		var seek_width = (seek_time - this.curr_time) * 100 / this.duration;
-		var seek_left = this.curr_time*100 / this.duration;
-		var time_left = seek_left + seek_width;
+		seek_width = (seek_time - this.curr_time) * 100 / this.duration;
+		seek_left = this.curr_time*100 / this.duration;
+		time_left = seek_left + seek_width;
 	} else {
-		var seek_width = (this.curr_time - seek_time) * 100 / this.duration;
-		var seek_left = seek_time*100 / this.duration;
-		var time_left = seek_left;
+		seek_width = (this.curr_time - seek_time) * 100 / this.duration;
+		seek_left = seek_time*100 / this.duration;
+		time_left = seek_left;
 	}
 	TV.show(el_seek);
 	TV.show(el_time);
@@ -442,7 +446,7 @@ TVComponents.Player.prototype.updateTimeline = function() {
 
 TVComponents.Player.prototype.formatTime = function(val) {
 	var timeHour = Math.floor(val/3600);
-	var timeMinute = Math.floor((val%3600)/60);
+	var timeMinute = Math.floor(val%3600 / 60);
 	var timeSecond = Math.floor(val%60);
 	timeHour = timeHour < 10 ? "0" + timeHour : timeHour;
 	timeMinute = timeMinute < 10 ? "0" + timeMinute : timeMinute;
@@ -471,7 +475,7 @@ TVComponents.Player.prototype.stopInactive = function() {
 };
 
 TVComponents.Player.prototype.getErrorTemplateHtml = function() {
-	var name = (TV.app.curr_popup) ? TV.app.curr_popup.name : TV.app.curr_page.name;
+	var name = TV.app.curr_popup ? TV.app.curr_popup.name : TV.app.curr_page.name;
 	var ejs_path = 'text#';
 	ejs_path += TV.app.ejs[ejs_path + name + '.' + this.id] ? name + '.' + this.id : 'common_player_error';
 	return TV.app.ejs[ejs_path] ? TV.app.ejs[ejs_path](this) : null;
