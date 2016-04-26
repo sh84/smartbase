@@ -25,7 +25,7 @@ if (!Function.prototype.bind) {
 	var p = 'browser';
 	var em = false;
 
-	if (navigator.userAgent.match(/smarttv/i)) p = 'samsung';
+	if (navigator.userAgent.match(/smart-tv/i)) p = 'samsung';
 	if (navigator.userAgent.match(/Tizen/i)) p = 'tizen';
 	if (navigator.userAgent.match(/LG Browser/i)) p = 'lg';
 	if (navigator.userAgent.match(/WebOS|Web0S/i)) p = 'webos';
