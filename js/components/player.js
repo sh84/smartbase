@@ -279,6 +279,8 @@ TVComponents.Player.prototype.onvideoprogress = function(time) {
 	if (this._show_seek) this.hideSeek();
 	if (this.state == 'stop') return;
 	if (this.state == 'play' && time == 4294966) return;
+	if (this._last_videoprogress_time && time == 0) return;
+	this._last_videoprogress_time = time;
 	TV.hide('[data-id="player_error"]', this.el);
 	if (this.onprogress && this.onprogress(time / 1000) === false) return;
 	if (this.data.seek && !this._data_seek) {
@@ -376,6 +378,7 @@ TVComponents.Player.prototype.stop = function() {
 	if (this.state == 'stop') return;
 	TV.addClass(this.buttons.play.el, TVComponents.Player.btn_play_class);
 	TV.removeClass(this.buttons.play.el, TVComponents.Player.btn_pause_class);
+	this._last_videoprogress_time = null;
 	this._where_to_seek = null;
 	this.hideSeek(true);
 	this.stopInactive();
