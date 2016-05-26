@@ -19,6 +19,9 @@ TVComponents.Player = function(el, adjacent_buttons, parent, class_name) {
 	this.onautoseek = null;    // колбэк выполнения автосика
 	this.onerror = null;       // колбэк возникновения ошибки
 	this.onprogress = null;    // колбэк позиции проигрывания 
+	this.onpauseclick = null;  // колбэк нажатия кнопки pause 
+	this.onplayclick = null;   // колбэк нажатия кнопки play
+	
 
 	this.autostart = this.attributes['autostart'] && this.attributes['autostart'] != 'false';
 	this.seek_show_time = this.attributes['seek_show_time'] ? this.attributes['seek_show_time']*1 : 1000;  // время отображения перемотки
@@ -86,8 +89,10 @@ TVComponents.Player.prototype.onready = function() {
 		this.buttons._act_btn = null; // разрешаем повторное нажатие
 		if (this.state == 'play') {
 			this.pause();
+			this.onpauseclick && this.onpauseclick();
 		} else if (!this._seek_timer) {
 			this.play();
+			this.onplayclick && this.onplayclick();
 		}
 	}.bind(this);
 
