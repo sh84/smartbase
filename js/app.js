@@ -210,6 +210,7 @@ TV.prototype.render = function(start_btn, without_page) {
 	this.popup_el = document.querySelector('#'+id+' [data-type="popup"]');
 	this.popup_overlay_el = document.querySelector('#'+id+' [data-type="popup_overlay"]');
 	this._footer_btns = {};
+	TVButton._initButtons(this._footer_btns);
 
 	if (!without_page) {
 		if (Object.keys(this.pages).length == 0) throw 'No pages to show';
@@ -236,6 +237,7 @@ TV.prototype.renderFooter = function() {
 		btn && btn.clear();
 	}
 	this._footer_btns = {};
+	TVButton._initButtons(this._footer_btns);
 	['red', 'yellow', 'green', 'blue', 'return'].forEach(function(key) {
 		var el = TV.el('[data-type="footer-'+key+'"]', this.el),
 			allow_on_popup = this.curr_page['key_'+key+'_on_popup'] && this.curr_page['key_'+key+'_on_popup'] !== 'false' ? true : false;

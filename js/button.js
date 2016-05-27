@@ -240,6 +240,10 @@ TVButton.prototype.onmouseover = function(e) {
 	if ((TV.app.not_hover_on_bound || TV.app.not_hover_on_bound === '0') && !this.hover_on_bound) not_hover_on_bound = TV.app.not_hover_on_bound * 1;
 	if (this.not_hover_on_bound || this.not_hover_on_bound === '0') not_hover_on_bound = this.not_hover_on_bound * 1;
 	if (not_hover_on_bound !== false && e && !TV.isFullVisible(this.el, not_hover_on_bound)) return;
+	// убираем наведение с кнопок футера
+	for (var id in TV.app._footer_btns) {
+		TV.app._footer_btns[id].resetHover();
+	}
 	TV.addClass(this.el, TVButton.hover_class);
 	var hover_btn = this.adjacent_buttons._hover_btn;
 	if (hover_btn == this) return;
