@@ -21,6 +21,7 @@ TVComponents.Player = function(el, adjacent_buttons, parent, class_name) {
 	this.onprogress = null;    // колбэк позиции проигрывания 
 	this.onpauseclick = null;  // колбэк нажатия кнопки pause 
 	this.onplayclick = null;   // колбэк нажатия кнопки play
+	this.onstopclick = null;   // колбэк нажатия кнопки stop
 	
 
 	this.autostart = this.attributes['autostart'] && this.attributes['autostart'] != 'false';
@@ -100,6 +101,7 @@ TVComponents.Player.prototype.onready = function() {
 		this.buttons.stop.onclick = function () {
 			this.buttons._act_btn = null;
 			this.stop();
+			this.onstopclick && this.onstopclick();
 		}.bind(this);
 
 		this.buttons.timeline.onclick = function() {
