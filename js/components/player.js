@@ -196,7 +196,7 @@ TVComponents.Player.prototype.onAnyKey = function(key_code) {
 };
 
 TVComponents.Player.prototype.btnProcessSeek = function(direction) {
-	if (this._where_to_seek === null && this.state != 'play' || this.buffering) return;
+	if (this._where_to_seek === null && this.state != 'play' || this.buffering || !this.data.allow_seek) return;
 	TV.show('[data-id="player_loader"]', this.el);
 	if (this.state == 'play') this.pause();
 	if (this._where_to_seek === null) this._where_to_seek = this.curr_time;
