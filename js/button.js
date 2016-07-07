@@ -116,8 +116,6 @@ TVButton.initButtonsAndComponents = function(obj, start_btn_id) {
 		new TVButton(el, obj.buttons, parent);
 	});
 
-	if (Object.keys(obj.buttons).length == 0) return;
-
 	// проверяем что нет ссылок на несуществующие кнопки,
 	// ищем стартовую и активную кнопку
 	// блокируем выключенные кнопки

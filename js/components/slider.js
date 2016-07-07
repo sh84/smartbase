@@ -148,6 +148,7 @@ TVComponents.Slider.prototype._addElement = function(item, is_first) {
 
 TVComponents.Slider.prototype._makeComponents = function(obj) {
 	TVButton.initButtonsAndComponents(obj);
+	obj.enable();
 	for (var id in obj.buttons) {
 		var btn = obj.buttons[id];
 		btn.onclick = function(a, b) {
