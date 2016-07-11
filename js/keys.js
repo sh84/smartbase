@@ -50,7 +50,9 @@ if (TV.platform.isTizen) {
 		TV.keys.pause = map_keys['MediaPause'];
 		TV.keys.stop = map_keys['MediaStop'];
 		TV.keys.rw = map_keys['MediaRewind'];
+		TV.keys.rw_ = map_keys['MediaRewind'];
 		TV.keys.ff = map_keys['MediaFastForward'];
+		TV.keys.ff_ = map_keys['MediaFastForward'];
 		TV.keys.tools = map_keys['Tools'];
 		TV.keys.num_1 = map_keys['1'];
 		TV.keys.num_2 = map_keys['2'];
@@ -84,7 +86,9 @@ if (TV.platform.isTizen) {
 	TV.keys.pause = TV.key_api.KEY_PAUSE;
 	TV.keys.stop = TV.key_api.KEY_STOP;
 	TV.keys.rw = TV.key_api.KEY_RW;
+	TV.keys.rw_ = TV.key_api.KEY_REWIND_;
 	TV.keys.ff = TV.key_api.KEY_FF;
+	TV.keys.ff_ = TV.key_api.KEY_FF_;
 	TV.keys.return = TV.key_api.KEY_RETURN;
 	TV.keys.tools = TV.key_api.KEY_TOOLS;
 	TV.keys.num_1 = TV.key_api.KEY_1;
@@ -117,7 +121,9 @@ if (TV.platform.isTizen) {
 	TV.keys.pause = 19;
 	TV.keys.stop = 413;
 	TV.keys.rw = 412;
+	TV.keys.rw_ = 412;
 	TV.keys.ff = 417;
+	TV.keys.ff_ = 417;
 	TV.keys.return = 461;
 	TV.keys.tools = 457;
 	TV.keys.num_1 = 49;
@@ -157,7 +163,9 @@ if (TV.platform.isTizen) {
 	TV.keys.pause = VK_PAUSE;
 	TV.keys.stop = VK_STOP;
 	TV.keys.rw = VK_REWIND;
+	TV.keys.rw_ = VK_REWIND;
 	TV.keys.ff = VK_FAST_FWD;
+	TV.keys.ff_ = VK_FAST_FWD;
 	TV.keys.return = VK_BACK;
 	TV.keys.tools = 457;
 	TV.keys.num_1 = VK_1;
@@ -190,7 +198,9 @@ if (TV.platform.isTizen) {
 	TV.keys.pause = 190; //>
 	TV.keys.stop = 191;  //?
 	TV.keys.rf = 186;    //;
+	TV.keys.rf_ = 186;    //;
 	TV.keys.ff = 222;    //'
+	TV.keys.ff_ = 222;    //'
 	TV.keys.return = 8;
 	TV.keys.tools = 84;  //t
 	TV.keys.num_1 = 97;
