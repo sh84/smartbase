@@ -178,9 +178,9 @@ TVComponents.Player.prototype.onAnyKey = function(key_code) {
 		if (this.state == 'play') this.buttons.play.onmouseclick();
 	} else if (key_code == TV.keys.stop) {
 		this.buttons.stop.onmouseclick();
-	} else if (key_code == TV.keys.rw) {
+	} else if (key_code == TV.keys.rw || key_code == TV.keys.rw_) {
 		this.btnProcessSeek(-1);
-	} else if (key_code == TV.keys.ff) {
+	} else if (key_code == TV.keys.ff || key_code == TV.keys.ff_) {
 		this.btnProcessSeek(1);
 	} else if (key_code == TV.keys.return) {
 		if (this.hide_panel) {
