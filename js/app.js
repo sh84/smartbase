@@ -260,18 +260,18 @@ TV.prototype.onKeyBack = function() {
 	if (this.key_back_ignore) return;
 	if (this.curr_popup) {
 		this.curr_popup.hide();
+	} else if (this.history.length > 0) {
+		this.curr_page.hide();
+	} else if (TV.platform.isSamsung) {
+		TV.widget_api.sendReturnEvent();
 	} else {
-		if (this.history.length > 0) {
-			this.curr_page.hide();
-		} else {
-			this.exit();
-		}
+		this.exit();
 	}
 };
 
 TV.prototype.exit = function() {
 	if (TV.platform.isSamsung) {
-		TV.widget_api.sendReturnEvent();
+		TV.widget_api.sendExitEvent();
 	} else if (TV.platform.isLG || TV.platform.isWebOs) {
 		window.NetCastBack();
 	} else if (TV.platform.isPhilips) {
@@ -281,19 +281,24 @@ TV.prototype.exit = function() {
 
 TV.prototype.onKey = function(event) {
 	// пока идет загрузка - не обрабатываем
-	if (this.load_data_callback) return;
 	var key_code = event.keyCode;
+	if (key_code == TV.keys.exit || this.load_data_callback && key_code == TV.keys.return) {
+		event.preventDefault && event.preventDefault();
+		this.exit();
+		return;
+	}
+	if (this.load_data_callback) return;
 	// глобальный обработчик приложения
 	if (this.onAnyKey) {
-		if (this.onAnyKey(key_code) === false && key_code !== TV.keys.exit) {
+		if (this.onAnyKey(key_code) === false) {
 		    if (key_code == TV.keys.return && event.preventDefault) event.preventDefault();
 		    return;
 		}
 	}
-	var page_or_popup = this.curr_popup || this.curr_page;
     // глобальный обработчик страницы
+	var page_or_popup = this.curr_popup || this.curr_page;
 	if (page_or_popup.onAnyKey) {
-		if (page_or_popup.onAnyKey(key_code) === false && key_code !== TV.keys.exit) {
+		if (page_or_popup.onAnyKey(key_code) === false) {
 		    if (key_code == TV.keys.return && event.preventDefault) event.preventDefault();
 		    return;
 		}
@@ -302,7 +307,7 @@ TV.prototype.onKey = function(event) {
 	for (var i in page_or_popup.buttons) {
 		var btn = page_or_popup.buttons[i];
 		if (btn.onAnyKey) {
-			if (btn.onAnyKey(key_code) === false && key_code !== TV.keys.exit) {
+			if (btn.onAnyKey(key_code) === false) {
 			    if (key_code == TV.keys.return && event.preventDefault) event.preventDefault();
 			    return;
 			}
@@ -316,7 +321,6 @@ TV.prototype.onKey = function(event) {
 		if (cpp[fn_name]) cpp[fn_name].call(cpp, p);
 	};
 	var actions = {
-		'exit':   this.exit.bind(this),
 		'left':   TVButton.onCursorKey.bind(TVButton, cpp, 'left'),
 		'right':  TVButton.onCursorKey.bind(TVButton, cpp, 'right'),
 		'up':     TVButton.onCursorKey.bind(TVButton, cpp, 'up'),
