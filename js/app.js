@@ -319,7 +319,6 @@ TV.prototype.onKey = function(event) {
 		if (cpp[fn_name]) cpp[fn_name].call(cpp, p);
 	};
 	var actions = {
-		'exit':   this.exit.bind(this),
 		'left':   TVButton.onCursorKey.bind(TVButton, cpp, 'left'),
 		'right':  TVButton.onCursorKey.bind(TVButton, cpp, 'right'),
 		'up':     TVButton.onCursorKey.bind(TVButton, cpp, 'up'),
