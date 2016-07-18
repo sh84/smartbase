@@ -258,18 +258,18 @@ TV.prototype.onKeyBack = function() {
 	if (this.key_back_ignore) return;
 	if (this.curr_popup) {
 		this.curr_popup.hide();
+	} else if (this.history.length > 0) {
+		this.curr_page.hide();
+	} else if (TV.platform.isSamsung) {
+		TV.widget_api.sendReturnEvent();
 	} else {
-		if (this.history.length > 0) {
-			this.curr_page.hide();
-		} else {
-			this.exit();
-		}
+		this.exit();
 	}
 };
 
 TV.prototype.exit = function() {
 	if (TV.platform.isSamsung) {
-		TV.widget_api.sendReturnEvent();
+		TV.widget_api.sendExitEvent();
 	} else if (TV.platform.isLG || TV.platform.isWebOs) {
 		window.NetCastBack();
 	} else if (TV.platform.isPhilips) {
