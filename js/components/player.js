@@ -238,7 +238,7 @@ TVComponents.Player.prototype.btnProcessSeek = function(direction) {
 		this._seek_direction = null;
 		this._seek_step = null;
 		TV.hide('[data-id="player_loader"]', this.el);
-	}.bind(this), 700);
+	}.bind(this), 1000);
 };
 
 // видео объект получил метаданные
