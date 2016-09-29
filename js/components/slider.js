@@ -212,8 +212,9 @@ TVComponents.Slider.prototype._getItem = function(index) {
 		if (k < 0) k = k + this.data.length * Math.ceil(-k / this.data.length);
 		if (k >= this.data.length) k = k % this.data.length;
 	}
-	if (!this.data[k]) return null;
-	for (var i in this.data[k])	item[i] = this.data[k][i];
+	var item_data = this.getItemData ? this.getItemData(k) : this.data[k];
+	if (!item_data) return null;
+	for (var i in item_data) item[i] = item_data[i];
 	item._index = TVComponents.Slider._buttons_counter;
 	TVComponents.Slider._buttons_counter += 1;
 	return item;

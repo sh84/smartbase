@@ -238,7 +238,7 @@ TVComponents.Player.prototype.btnProcessSeek = function(direction) {
 		this._seek_direction = null;
 		this._seek_step = null;
 		TV.hide('[data-id="player_loader"]', this.el);
-	}.bind(this), 700);
+	}.bind(this), 1000);
 };
 
 // видео объект получил метаданные
@@ -290,6 +290,7 @@ TVComponents.Player.prototype.onvideoprogress = function(time) {
 	this._last_videoprogress_time = time;
 	TV.hide('[data-id="player_error"]', this.el);
 	if (this.onprogress && this.onprogress(time / 1000) === false) return;
+	if (!this._videoready) this.onvideoready(); // в Netcast не всегда при старте плеера срабатывает onvideoready
 	if (this.data.seek && !this._data_seek) {
 		TV.log('Auto seek to', this.data.seek, ' the state is', this.state);
 		this._data_seek = true;
