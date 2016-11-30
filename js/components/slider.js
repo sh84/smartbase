@@ -235,8 +235,13 @@ TVComponents.Slider.prototype.oncursor = function(side, is_mouse) {
 	TVComponent.prototype.oncursor.call(this, side);
 };
 
-TVComponents.Slider.prototype.moveTo = function(el) {
-	var scrollbar = TV.el('[data-type="slider-scrollbar"]', this.el);
+TVComponents.Slider.prototype.moveTo = function(index) {
+	if (index == this.start_position || index > this.data.length - 1) return;
+
+	var scrollbar = TV.el('[data-type="slider-scrollbar"]', this.el),
+		old_movie_debounce = this.movie_debounce, 
+		steps_count = Math.abs(index - this.start_position);
+
 	// выключаем плавную прокрутку
 	this.container_el.style.transition = "none";
 	this.container_el.style.webkitTransition = "none";
@@ -244,11 +249,15 @@ TVComponents.Slider.prototype.moveTo = function(el) {
 		scrollbar.style.transition = "none";
 		scrollbar.style.webkitTransition = "none";
 	}
+	
+	// выключаем запрет быстрого пролистывания
+	this.movie_debounce = null;
+
 	// листаем, пока el не станет первым
-	for (var i = 0; i<=this.data.length-1; i++) {
-		if (this.buttons[this.first_btn_id].el != el) this._movie(false);
-		else break;
+	for (var i = 0; i < steps_count; i++) {
+		this._movie(index < this.start_position);
 	}
+
 	this.setScrollbar();
 	// вызываем repaint у браузера перед тем, как включить transition
 	this.container_el.offsetHeight;
@@ -259,20 +268,16 @@ TVComponents.Slider.prototype.moveTo = function(el) {
 	}
 	this.container_el.style.transition = "all 0.3s ease-in-out";
 	this.container_el.style.webkitTransition = "all 0.3s ease-in-out";
+	// включаем запрет быстрого пролистывания
+	this.movie_debounce = old_movie_debounce;
 };
 
 TVComponents.Slider.prototype.moveToCenter = function() {
 	if (this.data.length < 2) return;
 	var center_ind = Math.floor(this.data.length/2) - 1,
 		curr_ind = 0;
-		
-	for (var btn in this.buttons) {
-		if (curr_ind == center_ind) {
-			this.moveTo(btn.el);
-			break;
-		}
-		curr_ind++;
-	}
+
+	this.moveTo(center_ind);
 };
 
 // is_first - движение влево/вверх
