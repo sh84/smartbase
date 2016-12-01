@@ -23,7 +23,8 @@ function TVPage(app, name) {
 		'key_green_on_popup',	// признак срабатывания зеленой кнопки при открытых попапах 
 		'key_blue_on_popup',	// признак срабатывания синей кнопки при открытых попапах 
 		'no_footer',			// не показывать футер				
-		'no_header'				// не показывать хидер
+		'no_header',			// не показывать хидер
+		'allow_dbl_click'		// разрешить двойное нажатие
 	];
 	for (var i in this.props) {
 		this[this.props[i]] = this.attributes[this.props[i]] || '';

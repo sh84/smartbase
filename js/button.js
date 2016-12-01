@@ -22,6 +22,7 @@ function TVButton(el, adjacent_buttons, parent) {
 	this.not_handle_mouse = this.attributes['not_handle_mouse']; // не реагировать на движения мышкой
 	this.not_hover_on_bound = this.attributes['not_hover_on_bound']; // не разрешать наводить на элементы выходящие за границу экрана на столько пикселей
 	this.hover_on_bound = this.attributes['hover_on_bound']; // разрешать наводить на элементы выходящие за границу экрана
+	this.allow_dbl_click = this.attributes['allow_dbl_click'] && this.attributes['allow_dbl_click'] == 'true' ? true : false; // разрешать двойное нажатие
 	if (this.attributes['btn']) {
 		var s = this.attributes['btn'].split(',');
 		if (s[0]) this.up = s[0].trim();
@@ -263,8 +264,10 @@ TVButton.prototype.onmouseout = function() {
 TVButton.prototype.onmouseclick = function(event) {
 	if (this.disabled) return;
 	if (!this.isMouseOnly()) {
-		var act_btn = this.adjacent_buttons._act_btn;
-		if (act_btn == this) return; // предотвращаем двойное нажатие
+		if (!this.allow_dbl_click) {
+			var act_btn = this.adjacent_buttons._act_btn;
+			if (act_btn == this) return; // предотвращаем двойное нажатие
+		}
 		for (var btn in this.adjacent_buttons) {
 			if (this.adjacent_buttons[btn]) TV.removeClass(this.adjacent_buttons[btn].el, TVButton.act_class);
 		};
