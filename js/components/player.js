@@ -313,7 +313,7 @@ TVComponents.Player.prototype.onvideoprogress = function(time) {
 	this.curr_time = (this.data.base_time || 0) + time / 1000;
 	if (!this.isLive()) {
 		this.updateTimeline();
-		var end_time = (TV.platform.isLG || TV.platform.isWebOs) ? this.duration-0.99 : this.duration;
+		var end_time = (TV.platform.isLG || TV.platform.isWebOs || TV.platform.isTizen) ? this.duration-0.99 : this.duration;
 		if (this.curr_time > 0 && this.duration > 0 && this.curr_time >= end_time) {
 			TV.log('force stop', this.state);
 			this.stop();
