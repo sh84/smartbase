@@ -25,16 +25,12 @@ TVComponents.GridSlider.prototype.onready = function() {
 TVComponents.GridSlider.prototype._movie = function(is_first) {
 	if (is_first && this.start_position <= 0) return;
 	if (!is_first && this.start_position + this.count >= this.data.length) return;
-	this.buttons._hover_btn && this.buttons._hover_btn.onmouseout();
 	
-	var max = 0, curr = null;
+	var max = 0;
 	for (var i=0; i < (this.is_vertical ? this.box_x : this.box_y); i++) {
 		var el = is_first ? this.buttons[this.first_btn_id].el.previousElementSibling : this.buttons[this.last_btn_id].el.nextElementSibling;
-		// ищем позицию текущей кнопки
-		var btn = this.is_vertical ? this.buttons[this.box[is_first ? 0 : this.box_y-1][i]] : this.buttons[this.box[i][is_first ? 0 : this.box_x-1]];
-		if (btn && this.buttons._hover_btn && this.buttons._hover_btn.id == btn.id) curr = i;
 		// удаляем вышедшую за видимые границы линию
-		btn = this.is_vertical ? this.buttons[this.box[is_first ? this.box_y-1: 0][i]] : this.buttons[this.box[i][is_first ? this.box_x-1: 0]];
+		var btn = this.is_vertical ? this.buttons[this.box[is_first ? this.box_y-1: 0][i]] : this.buttons[this.box[i][is_first ? this.box_x-1: 0]];
 		if (btn) {
 			btn.el.removeAttribute('data-type');
 			btn.remove();
@@ -63,27 +59,6 @@ TVComponents.GridSlider.prototype._movie = function(is_first) {
 		this.container_el.style.left = pos + 'px';
 	}
 
-	// фиксируем переход
-	/*if (curr != null) {
-		if (this.is_vertical) {
-			var x = curr;
-			var y = is_first ? 0 : this.box_y-1;
-			do {
-				var btn = this.buttons[this.box[y][x]];
-				x -= 1;
-			} while (!btn);
-			this.buttons._hover_btn[is_first ? 'up' : 'down'] = btn.id;
-		} else {
-			var x = is_first ? 0 : this.box_x-1;
-			var y = curr;
-			do {
-				var btn = this.buttons[this.box[y][x]];
-				y -= 1;
-			} while (!btn);
-			this.buttons._hover_btn[is_first ? 'left' : 'right'] = btn.id;
-		}
-	}*/
-	
 	this.updateNavButtons();
 };
 
