@@ -282,6 +282,12 @@ TVComponents.Player.prototype.onvideobuffering = function(val) {
 // прогресс проигрывания
 TVComponents.Player.prototype.onvideoprogress = function(time) {
 	TV.log('onvideoprogress', time);
+	if (this.video._tizen_stream_completed) {
+		this.video._tizen_stream_completed = false;
+		this.stop();
+		this.onend && this.onend();
+		return;
+	}
 	if (this.buffering) this.onvideobuffering(100);
 	if (this._show_seek) this.hideSeek();
 	if (this.state == 'stop') return;

@@ -6,6 +6,7 @@ TV.PlayerWrapper = function(el) {
 	this.onerror = null;      // ошибка воспроизведения
 	this.video_window_w = null; // размер видео-окна. используется для Samsung
 	this.video_window_h = null;
+	this._tizen_stream_completed = false; // флаг для tizen native-эвента и вызова onend
 
 	this.el = TV.el(el);
 	if (this.el) TV.PlayerWrapper.video_el = this.el;
@@ -88,6 +89,8 @@ TV.PlayerWrapper.prototype.attachCallbacks = function() {
 			}.bind(this),
 			onstreamcompleted: function() {
 				TV.log("Tizen stream completed");
+				this._tizen_stream_completed = true;
+				this.onprogress && this.onprogress(this._curr_time);
 			}.bind(this),
 			onerror: function(error) {
 				this.onerror && this.onerror(error);
