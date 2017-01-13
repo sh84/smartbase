@@ -220,7 +220,7 @@ TV.log = function() {
 		s += TV.dump_props(arguments[i])+' ';
 	}
 	if (TV.platform.isSamsung && TV.platform.isEmulator) {
-		alert(s);
+		console.log(s);
 	} else if (console && console.log) {
 		console.log.apply(console, arguments);
 	}
