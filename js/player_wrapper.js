@@ -7,6 +7,7 @@ TV.PlayerWrapper = function(el) {
 	this.video_window_w = null; // размер видео-окна. используется для Samsung
 	this.video_window_h = null;
 	this._tizen_stream_completed = false; // флаг для tizen native-эвента и вызова onend
+	this.video_resolution = {width: null, height: null}
 
 	this.el = TV.el(el);
 	if (this.el) TV.PlayerWrapper.video_el = this.el;
@@ -103,6 +104,15 @@ TV.PlayerWrapper.prototype.attachCallbacks = function() {
 		this.el.OnCurrentPlayTime = function(time) {
 			this._curr_time = time;
 			this.onprogress && this.onprogress(time);
+
+			// устанавливаем верное вертикальное разрешение
+			var video_width = this.el.GetVideoWidth();
+			var video_height = this.el.GetVideoHeight();
+			if (this.video_resolution.height != video_height) {
+				this.setRatio();
+				this.video_resolution.width = video_width;
+				this.video_resolution.height = video_height;
+			}
 		}.bind(this);
 		var fn_buff = function(val) {
 			this.onbuffering && this.onbuffering(val);
@@ -340,7 +350,19 @@ TV.PlayerWrapper.prototype._getUrl = function() {
 TV.PlayerWrapper.prototype.setDisplayArea = function(left, top, width, height) {
 	if (TV.platform.isSamsung) {
 		var body_rect = TV.getRect('body');
-		this.el.SetDisplayArea(this.video_window_w * left/body_rect.width, this.video_window_h * top/body_rect.height, this.video_window_w * width/body_rect.width, this.video_window_h * height/body_rect.height);
+		var da_left = this.video_window_w * left/body_rect.width, //da - display area
+			da_top = this.video_window_h * top/body_rect.height,
+			da_width = this.video_window_w * width/body_rect.width,
+			da_height = this.video_window_h * height/body_rect.height;
+		
+		this.el.SetDisplayArea(da_left, da_top, da_width, da_height);
+
+		this.setRatio = function() {
+			var video_height = (this.video_window_w / this.el.GetVideoWidth()) * this.el.GetVideoHeight();
+			if (!isNaN(video_height)) {
+				this.el.SetDisplayArea(da_left, (da_height-height)/2, da_width, video_height);
+			}
+		}.bind(this);
 	} else {
 		TV.show(this.el);
 		this.el.style.left = left+'px';
