@@ -6,7 +6,7 @@ TVComponents.Dropdown = function(el, adjacent_buttons, parent, class_name) {
 };
 TVComponents.Dropdown.default_title = 'Все';
 TVComponents.Dropdown.prototype = Object.create(TVComponent.prototype);
- 
+
 TVComponents.Dropdown.prototype.onready = function() {
 	var sides = ['up','down','left','right'];
 	// создаем кнопку
@@ -15,11 +15,11 @@ TVComponents.Dropdown.prototype.onready = function() {
 	sides.forEach(function(side) {
 		this.button[side] = 'out';
 	}.bind(this));
-	
+
 	// создаем компонент слайдера
     el = TV.el('[data-type="dropdown_slider"]', this.el);
     var item_templ_name = 'item#' + (TV.app.curr_popup ? TV.app.curr_popup.name : TV.app.curr_page.name) + '.' + this.id;
-    if (this.attributes.item_template && TV.app.ejs[this.attributes.item_template]) item_templ_name = this.attributes.item_template;    
+    if (this.attributes.item_template && TV.app.ejs[this.attributes.item_template]) item_templ_name = this.attributes.item_template;
 	el.setAttribute('data-item_template', item_templ_name);
     this.slider = new TVComponents.Slider(el, this.buttons, this);
     this.slider.class_name = 'Slider';
@@ -28,7 +28,7 @@ TVComponents.Dropdown.prototype.onready = function() {
     	if (typeof(this.slider.data[i].id) == 'undefined') this.slider.data[i].id = i;
     }
     this.slider.init();
-	
+
 	// если элементов в слайдере меньше, чем указано в data-count, подгоняем высоту
 	if (this.data.length <= this.slider.count) this.slider.el.style.height = TV.getSize(TV.el('.slider-item', this.slider.el)).height * this.slider.data.length + 'px';
     this.slider.disable();
@@ -36,11 +36,11 @@ TVComponents.Dropdown.prototype.onready = function() {
 	this.buttons._start_btn = this.button;
 	this.enable();
 	this.attachCallbacks();
-	
+
 	// выставляем стартовое значение
 	this.data.forEach(function(el) {
 		if (el.selected) {
-			for (var id in this.slider.buttons) {	
+			for (var id in this.slider.buttons) {
 				if (el.id == this.slider.buttons[id].attributes.key) this.slider.buttons[id].onmouseclick();
 			}
 		}
@@ -55,7 +55,7 @@ TVComponents.Dropdown.prototype.attachCallbacks = function() {
 		this.slider.enable();
 		this.slider.onmouseover();
 	}.bind(this);
-    
+
     this.slider.onclick = function(key) {
 	    if (typeof(key) == 'object') {
 		    TVComponent.prototype.onenter.call(this.slider);

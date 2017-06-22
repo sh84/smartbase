@@ -12,7 +12,7 @@ TVComponents.Slider = function(el, adjacent_buttons, parent, class_name) {
 	this.scrollbar = this.attributes['no_scrollbar'] ? false : true;               // показывать ли скролбар
     this.use_none = this.attributes['none'] ? true : false;
     this.movie_debounce = this.attributes['movie_debounce'] * 1 || null;           // движение не чаще чем раз в movie_debounce мс
-    
+
     this.is_vertical = this.direction == 'vertical';
 	this.is_horizontal = !this.is_vertical;
 	if (this.is_horizontal) {
@@ -43,10 +43,10 @@ TVComponents.Slider.prototype.onready = function() {
 		if (this.use_none) this._addNone();
 		return;
 	}
-	
+
 	this.first_btn_id = this.last_btn_id = this.first_el_pos = this.last_el_pos = null;
 	this.start_position = 0;
-	
+
 	if (this.attributes['loop'] && this.data.length >= this.loop_start_count) {
 		this.loop = true;
 		this.dynamic = true;
@@ -66,7 +66,7 @@ TVComponents.Slider.prototype.onready = function() {
 		var item = this._getItem(curr);
 		var el = this._addElement(item, false, curr >= start_btn && curr <= finish_btn);
 		var btn = null;
-		if (curr >= start_btn && curr <= finish_btn && item) btn = this._makeBtn(el); 
+		if (curr >= start_btn && curr <= finish_btn && item) btn = this._makeBtn(el);
 		if (curr >= start_btn && item && !flag_first) {
 			this.enable();
 			this.buttons._start_btn = btn;
@@ -74,7 +74,7 @@ TVComponents.Slider.prototype.onready = function() {
 			if (!this.isHover() && this.attributes.start && (!this.parent || this.parent.isHover())) {
 				this.adjacent_buttons._start_btn = this;
 				this.onmouseover();
-			} 
+			}
 			// еслик компонент активен - на стартовую кнопку устанавливаем курсор
 			if (this.isHover()) this.buttons._start_btn.onmouseover();
 			flag_first = true;
@@ -86,7 +86,7 @@ TVComponents.Slider.prototype.onready = function() {
 	this._initScrollbarButtons();
 	this.setScrollbar();
 	this.updateNavButtons();
-	
+
 	// прокручиваем к центральному элементу, если передан move_to_center = true
 	if (!this.loop && this.move_to_center) {
 		this.moveToCenter();
@@ -193,14 +193,14 @@ TVComponents.Slider.prototype._makeBtn = function(el, is_first) {
 		if (!this.first_btn_id) this.first_btn_id = btn.id;
 	}
 	this.btnAttachCallbacks(btn);
-	
+
 	// если внутри кнопки-компонента есть другие компоненты - инициализируем их
 	if (!this._makeComponents(btn)) {
 		// если компонент нет - клик должен работать как у button-а
 		btn.el.onclick = btn.onmouseclick.bind(btn);
 		btn.onenter = btn.onmouseclick.bind(btn);
 	}
-	
+
 	return btn;
 };
 
@@ -239,7 +239,7 @@ TVComponents.Slider.prototype.moveTo = function(index) {
 	if (index == this.start_position || index > this.data.length - 1) return;
 
 	var scrollbar = TV.el('[data-type="slider-scrollbar"]', this.el),
-		old_movie_debounce = this.movie_debounce, 
+		old_movie_debounce = this.movie_debounce,
 		steps_count = Math.abs(index - this.start_position);
 
 	// выключаем плавную прокрутку
@@ -249,7 +249,7 @@ TVComponents.Slider.prototype.moveTo = function(index) {
 		scrollbar.style.transition = "none";
 		scrollbar.style.webkitTransition = "none";
 	}
-	
+
 	// выключаем запрет быстрого пролистывания
 	this.movie_debounce = null;
 
@@ -288,19 +288,19 @@ TVComponents.Slider.prototype._movie = function(is_first) {
 		this._movie_time = Date.now();
 	}
 	if (!this.loop && is_first && this.start_position <= 0) return;
-	if (!this.loop && !is_first && this.start_position + this.count >= this.data.length + this.start_offset * 2) return; // хак, this.start_offset используется только в ClassSlider-е и в нем он равен количеству элементов от середины до конца 
+	if (!this.loop && !is_first && this.start_position + this.count >= this.data.length + this.start_offset * 2) return; // хак, this.start_offset используется только в ClassSlider-е и в нем он равен количеству элементов от середины до конца
 	this.start_position += is_first ? -1 : 1;
-	
+
 	// количество кнопок
 	var buttons_count = 0;
 	for (var i in this.buttons) {
 		if (this.buttons[i]._is_slider_item) buttons_count += 1;
 	}
-	
+
 	// крайняя от направления движения кнопка
 	var btn = is_first ? this.buttons[this.last_btn_id] : this.buttons[this.first_btn_id];
 	var curr_el = btn.el;
-	
+
 	// удаляем вышедшую за видимые границы кнопку (только если в слайдере столько же кнопок солько элементов)
 	if (buttons_count == this.count || is_first && buttons_count == this.count - 1) {
 		if (is_first) {
@@ -319,14 +319,14 @@ TVComponents.Slider.prototype._movie = function(is_first) {
 		btn.el.removeAttribute('data-type');
 		btn.remove();
 	}
-	
+
 	// обновляем вошедший элемент до кнопки
 	var elem = is_first ? this.buttons[this.first_btn_id] : this.buttons[this.last_btn_id];
 	elem = elem ? elem.el : curr_el; // сработает когда в слайдере вообще 1 активный элемент (кнопка)
 	elem = is_first ? elem.previousElementSibling : elem.nextElementSibling;
 	var size = TV.getSize(elem);
 	if (elem.innerHTML.replace(/\s+/, '')) this._makeBtn(elem, is_first); // только если в html-е не пустой блок
-	
+
 
 	if (this.dynamic) {
 		// удаляем крайний элемент
@@ -369,7 +369,7 @@ TVComponents.Slider.prototype._movie = function(is_first) {
 			this.container_el.style.top = container_top + 'px';
 		}
 	}
-	
+
 	this.updateNavButtons();
 };
 

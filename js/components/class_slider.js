@@ -42,17 +42,17 @@ TVComponents.ClassSlider.prototype._setClasses = function() {
 		var styles = '';
 		var item_class = '';
 		var els_length = els.length;
-	
+
 		// прячем добавленный и вышедший элементы, чтобы избежать мелькания
 		els[0].style.visibility = 'hidden';
 		els[els_length-1].style.visibility = 'hidden';
-	
+
 		var middle_index = (els_length-1)/2;
 		var middle_pos = this.is_horizontal ? TV.getSize(this.container_el).width/2 - TV.getSize(els[middle_index]).width/2 : TV.getSize(this.container_el).height/2 - TV.getSize(els[middle_index]).height/2;
 		var last_pos = middle_pos;
-	
-		// обходим элементы от среднего до начала, устанавливаем класс, для класса считаем позицию, 
-		// каждый раз равную позиции последнего - distance - размер самого элемента 
+
+		// обходим элементы от среднего до начала, устанавливаем класс, для класса считаем позицию,
+		// каждый раз равную позиции последнего - distance - размер самого элемента
 		var prev_pos = middle_pos;
 		for(var k = middle_index-1; k >= 0; k--) {
 			item_class = TVComponents.ClassSlider.prev_class+(1 - k + center)+'-'+this.id ;
@@ -65,11 +65,11 @@ TVComponents.ClassSlider.prototype._setClasses = function() {
 			}
 			els[k].className = item_class;
 		}
-	
-		// обходим элементы, начиная со среднего до конца, устанавливаем класс, для класса считаем позицию, 
+
+		// обходим элементы, начиная со среднего до конца, устанавливаем класс, для класса считаем позицию,
 		// каждый раз равную позиции последнего + его размеру + distance
 		for(var j = middle_index; j < els_length; j++) {
-			item_class = (last_pos == middle_pos) ? TVComponents.ClassSlider.middle_class+'-'+this.id 
+			item_class = (last_pos == middle_pos) ? TVComponents.ClassSlider.middle_class+'-'+this.id
 				: TVComponents.ClassSlider.next_class+(-1 + j - center)+'-'+this.id;
 			if (this.is_horizontal) {
 				styles += '.'+item_class.replace(/ /g, '.')+' {left: '+last_pos+'px; will-change: left, transform;} ';
@@ -81,9 +81,9 @@ TVComponents.ClassSlider.prototype._setClasses = function() {
 			els[j].className = item_class;
 		}
 		// если установлен атрибут positions=true, добавляем стили в документ
-		// иначе считаем, что позиции для классов определены в css 
+		// иначе считаем, что позиции для классов определены в css
 		if (this.set_positions) this._setStylesheet(styles);
-	
+
 		els[0].style.visibility = 'visible';
 		els[els_length-1].style.visibility = 'visible';
 	}
@@ -109,8 +109,8 @@ TVComponents.ClassSlider.prototype._setStylesheet = function(styles) {
 		style_el.setAttribute("title", "classSliderStyles");
 		var head = document.getElementsByTagName("head")[0];
 		head.appendChild(style_el);
-	} 
-	
+	}
+
 	// вставить стили
 	if (typeof styles === "string") {
 		// styles содержит текстовое определение таблицы стилей
@@ -123,6 +123,6 @@ TVComponents.ClassSlider.prototype._setStylesheet = function(styles) {
 			style_el.innerHTML = new_style;
 		} else {
 			style_el.innerHTML += '/*'+this.id+'*/'+styles+'/*end_'+this.id+'*/';
-		}			
+		}
 	}
 };

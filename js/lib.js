@@ -29,7 +29,7 @@ if (!Function.prototype.bind) {
 	if (navigator.userAgent.match(/Tizen/i)) p = 'tizen';
 	if (navigator.userAgent.match(/LG Browser/i)) p = 'lg';
 	if (navigator.userAgent.match(/WebOS|Web0S/i)) p = 'webos';
-	// Может лучше искать NETTV: NETTV/4.0.2? 
+	// Может лучше искать NETTV: NETTV/4.0.2?
 	if (navigator.userAgent.match(/Philips/i) || navigator.userAgent.match(/Streamium/i) || navigator.userAgent.match(/NETTV\/4/i)) p = 'philips';
 
 	// занчение: [тип <string>, эмулятор <boolean>], например ['samsung', true]
@@ -124,7 +124,7 @@ TV.isFullVisible = function(el, delta) {
 	delta = delta || 0;
 	var body_rect = TV.getRect(document.body);
 	var el_rect = TV.getRect(el);
-	return el_rect.left > body_rect.left - delta && 
+	return el_rect.left > body_rect.left - delta &&
 		el_rect.left + el_rect.width < body_rect.left + body_rect.width + delta &&
 		el_rect.top > body_rect.top - delta &&
 		el_rect.top + el_rect.height < body_rect.top + body_rect.height + delta;
@@ -165,7 +165,7 @@ TV.setHTML = function(selector, html, parent) {
 TV.render = function(selector, template, params, ejs_key) {
 	TV._time = new Date()/1;
 	var el = TV.el(selector);
-	
+
 	var p = TV.app.curr_popup ? TV.app.curr_popup.name : (TV.app.curr_page ? TV.app.curr_page.name : '');
 	if (TV._curr_p == p) {
 		// находим все selected кнопки/компоненты, запоминаем их id
@@ -189,7 +189,7 @@ TV.render = function(selector, template, params, ejs_key) {
 		TV._hover_btns = {};
 		TV._curr_p = p;
 	}
-	
+
 	var html = ejs_key ? TV.app.ejs[ejs_key][template](params) : TV.app.ejs[template](params);
 	TV.setHTML(el, html);
 

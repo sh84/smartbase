@@ -7,7 +7,7 @@ TVComponents.Player = function(el, adjacent_buttons, parent, class_name) {
 		seek: null,            // сделать сик при старте
 		duration: null,        // предопределенная длительность, секунд
 		max_seek: null,        // крайняя позиция допустимого сика, секунд (null - использовать duration)
-		base_time: null,       // базовое время текщей позиции, секунд 
+		base_time: null,       // базовое время текщей позиции, секунд
 		allow_seek: true,
 		allow_pause: true
 	};
@@ -18,11 +18,11 @@ TVComponents.Player = function(el, adjacent_buttons, parent, class_name) {
 	this.onstatechange = null; // колбэк изменения состояния проигрывания
 	this.onautoseek = null;    // колбэк выполнения автосика
 	this.onerror = null;       // колбэк возникновения ошибки
-	this.onprogress = null;    // колбэк позиции проигрывания 
-	this.onpauseclick = null;  // колбэк нажатия кнопки pause 
+	this.onprogress = null;    // колбэк позиции проигрывания
+	this.onpauseclick = null;  // колбэк нажатия кнопки pause
 	this.onplayclick = null;   // колбэк нажатия кнопки play
 	this.onstopclick = null;   // колбэк нажатия кнопки stop
-	
+
 
 	this.autostart = this.attributes['autostart'] && this.attributes['autostart'] != 'false';
 	this.seek_show_time = this.attributes['seek_show_time'] ? this.attributes['seek_show_time']*1 : 1000;  // время отображения перемотки
@@ -73,19 +73,19 @@ TVComponents.Player.prototype.onready = function() {
 	this.video.onprogress = this.onvideoprogress.bind(this);
 	this.video.onbuffering = this.onvideobuffering.bind(this);
 	this.video.onerror = this.onvideoerror.bind(this);
-	
+
 	// TODO переделать: act_btn, равный close остается с предыдущей страницы с плеером
 	this.buttons._act_btn = null;
-	
+
 	// устанавливаем плеер на нужную позицию и размер
 	this.setDisplayArea();
-	
+
 	// стартуем
 	this.video.url = this.data.url;
 	if (this.autostart && this.video.url) setTimeout(function() {
 		this.play();
 	}.bind(this), 0);
-	
+
 	this.buttons.play.onclick = function() {
 		this.buttons._act_btn = null; // разрешаем повторное нажатие
 		if (this.state == 'play') {
@@ -190,7 +190,7 @@ TVComponents.Player.prototype.onAnyKey = function(key_code) {
 			this.buttons.close.onmouseclick();
 			return false;
 		}
-		
+
 	}
 	if (hidden_panel && !this.inactive_without_action) return false;
 };
@@ -213,7 +213,7 @@ TVComponents.Player.prototype.btnProcessSeek = function(direction) {
 	} else if (this._seek_step > 4) {
 		step = 40;
 	}
-	
+
 	this._where_to_seek += step * direction;
 	if (this._where_to_seek >= (this.data.max_seek || this.duration)) {
 		this._where_to_seek = this.data.max_seek || this.duration;
@@ -226,7 +226,7 @@ TVComponents.Player.prototype.btnProcessSeek = function(direction) {
 	this.stopInactive();
 	this.showSeek(this._where_to_seek);
 	TV.setHTML('[data-id="player_control_time_cur"]', this.formatTime(this._where_to_seek), this.el);
-	
+
 	if (this._seek_timer) clearTimeout(this._seek_timer);
 	this._seek_timer = setTimeout(function() {
 		this._seek_timer = null;
@@ -246,7 +246,7 @@ TVComponents.Player.prototype.onvideoready = function() {
 	this.duration = this.data.duration ? this.data.duration : this.video.getDuration() / 1000;
 	this._videoready = true;
 	if (this.duration == -1) {
-		
+
 	}
 	TV.log('onvideoready, set duration='+this.duration+', stream duration='+this.video.getDuration()/1000);
 
@@ -300,7 +300,7 @@ TVComponents.Player.prototype.onvideoprogress = function(time) {
 	if (this.data.seek && !this._data_seek) {
 		TV.log('Auto seek to', this.data.seek, ' the state is', this.state);
 		this._data_seek = true;
-		
+
 		// pause-sleep-seek позволяет избежать зависания при автоперемотке с начала ролика
 		setTimeout( function() {
 			this.pause();

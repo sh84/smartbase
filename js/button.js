@@ -61,9 +61,9 @@ TVButton.initButtonsAndComponents = function(obj, start_btn_id) {
 	var is_hover = parent && obj.isHover();
 	// ищем кнопки
 	var buttons_els = TV.find('[data-type="button"]', root_el);
-	
+
 	// ищем компоненты
-	var component_el, components_els = [], 
+	var component_el, components_els = [],
 		all_components_els = TV.find('[data-type="component"]', root_el);
 	while (component_el = all_components_els.shift()) {
 		components_els.push(component_el);
@@ -89,14 +89,14 @@ TVButton.initButtonsAndComponents = function(obj, start_btn_id) {
 			}
 		}
 	}
-	
+
 	// инициализируем компоненты
 	components_els.map(function(el) {
-		if (!el._attributes.id) 
+		if (!el._attributes.id)
 			throw new Error('Not defined id for component '+(el.outerHTML||el.innerHTML));
 		var cl_name = el._attributes['class'];
 		var cl = cl_name ? TVComponents[cl_name] || window[cl_name] : null;
-		if (cl && typeof cl != 'function') 
+		if (cl && typeof cl != 'function')
 			throw new Error('Not defined TVComponents.'+cl_name+' or '+cl_name+' class for component '+el._attributes.id);
 		// el, adjacent_buttons, parent, class_name
 		return cl ? new cl(el, obj.buttons, parent, cl_name) : new TVComponent(el, obj.buttons, parent);
@@ -112,7 +112,7 @@ TVButton.initButtonsAndComponents = function(obj, start_btn_id) {
 
 	// инициализируем кнопки
 	buttons_els.map(function(el) {
-		if (!el._attributes.id) 
+		if (!el._attributes.id)
 			throw new Error('Not defined id for button '+(el.outerHTML||el.innerHTML));
 		new TVButton(el, obj.buttons, parent);
 	});
@@ -123,17 +123,17 @@ TVButton.initButtonsAndComponents = function(obj, start_btn_id) {
 	var first_btn;
 	for (var id in obj.buttons) {
 		var btn = obj.buttons[id];
-		if (btn.attributes.start && !btn.attributes.disabled && !btn.disabled) 
+		if (btn.attributes.start && !btn.attributes.disabled && !btn.disabled)
 			obj.buttons._start_btn = btn;
-		if (btn.attributes.selected && !btn.attributes.disabled && !btn.disabled) 
+		if (btn.attributes.selected && !btn.attributes.disabled && !btn.disabled)
 			obj.buttons._act_btn = btn;
-		if (btn.up && !obj.buttons[btn.up] && btn.up != 'out') 
+		if (btn.up && !obj.buttons[btn.up] && btn.up != 'out')
 			throw new Error('Not existent up for '+id);
-		if (btn.right && !obj.buttons[btn.right] && btn.right != 'out') 
+		if (btn.right && !obj.buttons[btn.right] && btn.right != 'out')
 			throw new Error('Not existent right for '+id);
-		if (btn.down && !obj.buttons[btn.down] && btn.down != 'out') 
+		if (btn.down && !obj.buttons[btn.down] && btn.down != 'out')
 			throw new Error('Not existent down for '+id);
-		if (btn.left && !obj.buttons[btn.left] && btn.left != 'out') 
+		if (btn.left && !obj.buttons[btn.left] && btn.left != 'out')
 			throw new Error('Not existent left for '+id);
 		if (btn.attributes.disabled) btn.disable();
 		if (!first_btn && !btn.disabled) first_btn = btn;
@@ -152,24 +152,24 @@ TVButton.initButtonsAndComponents = function(obj, start_btn_id) {
 			}
 		}
 	}
-	
+
 	// если передан start_btn - стартуем с него
 	if (first_btn && start_btn_id_replaced) {
 		obj.buttons._start_btn = obj.buttons[start_btn_id_replaced];
-		if (!obj.buttons._start_btn) 
+		if (!obj.buttons._start_btn)
 			throw new Error('Not existent start btn '+start_btn_id_replaced+' on '+obj.id+' render');
 		if (obj.buttons._start_btn.attributes.disabled) obj.buttons._start_btn = null;
 	}
 
 	// если компонент с data-selected и у его кнопок нет _act_btn, то наводим _act_btn на первую кнопку
-	if (parent && obj.attributes.selected && !obj.buttons._act_btn) 
+	if (parent && obj.attributes.selected && !obj.buttons._act_btn)
 		obj.buttons._act_btn = first_btn;
-	
+
 	// если перед рендеренгом уже были стартовая и активная кнопки - их и используем
 	if (!obj.buttons._start_btn) {
 		for (var id in TV._hover_btns) {
 			if (TV._hover_btns[id]+TV._render_ttl < TV._time) delete TV._hover_btns[id];
-			if (TV._hover_btns[id] && obj.buttons[id] && !obj.buttons[id].disabled) 
+			if (TV._hover_btns[id] && obj.buttons[id] && !obj.buttons[id].disabled)
 				obj.buttons._start_btn = obj.buttons[id];
 		}
 	}
@@ -234,7 +234,7 @@ TVButton.prototype.isMouseOnly = function() {
 
 TVButton.prototype.onmouseover = function(e) {
 	if (this.disabled) return;
-	// логика запрещения наведения (мышкой!) на частично/полностью скрытые кнопки 
+	// логика запрещения наведения (мышкой!) на частично/полностью скрытые кнопки
 	var not_hover_on_bound = false;
 	if ((TV.app.not_hover_on_bound || TV.app.not_hover_on_bound === '0') && !this.hover_on_bound) not_hover_on_bound = TV.app.not_hover_on_bound * 1;
 	if (this.not_hover_on_bound || this.not_hover_on_bound === '0') not_hover_on_bound = this.not_hover_on_bound * 1;

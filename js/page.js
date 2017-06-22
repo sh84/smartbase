@@ -2,7 +2,7 @@ function TVPage(app, name) {
 	var ejs_fn = app.ejs.page[name];
 	if (!ejs_fn) throw 'Not defined page '+name+' template';
 	app.pages[name] = this;
-	
+
 	this.app = app;
 	this.el = null;
 	this.buttons = {};          // хеш кнопок страницы
@@ -13,16 +13,16 @@ function TVPage(app, name) {
 		'header_title',			// заголовок страницы, признак страницы представленной в меню
 		'header_class',			// класс заголовка, признак страницы представленной в меню
 		'menu_down',            // ид элемента для перехода из меню вниз
-		'key_red_title',		// заголовок красной кнопки 
+		'key_red_title',		// заголовок красной кнопки
 		'key_yellow_title',		// заголовок желтой кнопки
 		'key_green_title',		// заголовок зеленой кнопки
 		'key_blue_title',		// заголовок синий кнопки
 		'key_return_title',		// заголовок кнопки return
-		'key_red_on_popup',		// признак срабатывания красной кнопки при открытых попапах 
-		'key_yellow_on_popup',	// признак срабатывания желтой кнопки при открытых попапах 
-		'key_green_on_popup',	// признак срабатывания зеленой кнопки при открытых попапах 
-		'key_blue_on_popup',	// признак срабатывания синей кнопки при открытых попапах 
-		'no_footer',			// не показывать футер				
+		'key_red_on_popup',		// признак срабатывания красной кнопки при открытых попапах
+		'key_yellow_on_popup',	// признак срабатывания желтой кнопки при открытых попапах
+		'key_green_on_popup',	// признак срабатывания зеленой кнопки при открытых попапах
+		'key_blue_on_popup',	// признак срабатывания синей кнопки при открытых попапах
+		'no_footer',			// не показывать футер
 		'no_header',			// не показывать хидер
 		'allow_dbl_click'		// разрешить двойное нажатие
 	];
@@ -84,7 +84,7 @@ TVPage.prototype.show = function() {
 		if (this.beforeshow() === false) return;
 	}
 	if (this.app.curr_popup) this.app.curr_popup.hide();
-	
+
 	var new_show_args = Array.prototype.slice.call(arguments, 0);
 	var arr_eql = function(a, b) {
 		if (a.length != b.length) return false;
@@ -98,16 +98,16 @@ TVPage.prototype.show = function() {
 		this.app.history.pop();
 	}
 	// если страница не из главного меню - добавляем предыдущую в историю переходов
-	if ((TV.app.history_in_menu || !this.isMenuPage()) && this.app.curr_page && 
+	if ((TV.app.history_in_menu || !this.isMenuPage()) && this.app.curr_page &&
 		// новая страница не совпадает с скрываемой
-		(this.app.curr_page != this || !arr_eql(this._show_args, new_show_args)) && 
-		!this.app.curr_page.no_history && 
+		(this.app.curr_page != this || !arr_eql(this._show_args, new_show_args)) &&
+		!this.app.curr_page.no_history &&
 		// скрываемая страница не совпадает с последней лежащей в истории
 		(!this.app.history.length || this.app.history[this.app.history.length-1][0] != this.app.curr_page.name || !arr_eql(this.app.history[this.app.history.length-1][1], this.app.curr_page._show_args))) {
 		this.app.history.push([this.app.curr_page.name, this.app.curr_page._show_args]);
 		// if (TV.platform.isWebOs && window.history.state === null) { window.history.pushState({"data":"some data"}); } // unavaliable because of "trustLevel":"netcast" in appinfo.json
 	}
-	
+
 	this._show_args = new_show_args;
 	app.curr_page.no_history = false;
 	if (this.app.curr_page) {

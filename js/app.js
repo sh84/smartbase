@@ -59,11 +59,11 @@ TV.prototype.generateToken = function() {
 };
 
 TV.prototype.onLoad = function() {
-	this.findDeviceID();	
-	
+	this.findDeviceID();
+
 	// свой css-класс для NetCast (не поддерживает box-shadow)
 	if (TV.platform.isLG) TV.addClass(document.body, 'netcast');
-	
+
 	// компилируем все найденные шаблоны
 	var templates = TV.find('script[type="text/template"]');
 	for (var i=0; i < templates.length; i++) {
@@ -155,7 +155,7 @@ TV.prototype.show = function() {
 			break;
 		}
 	}
-	
+
 	// если страниц меню нет - ищем страницу с data-start=true
 	if (!this.curr_page) {
 		for (var name in this.pages) {
@@ -166,7 +166,7 @@ TV.prototype.show = function() {
 			}
 		}
 	}
-	
+
 	// если и страниц с data-start=true нет - берем 1ю страницу
 	if (!this.curr_page) {
 		for (var name in this.pages) {
@@ -241,7 +241,7 @@ TV.prototype.renderFooter = function() {
 	['red', 'yellow', 'green', 'blue', 'return'].forEach(function(key) {
 		var el = TV.el('[data-type="footer-'+key+'"]', this.el),
 			allow_on_popup = this.curr_page['key_'+key+'_on_popup'] && this.curr_page['key_'+key+'_on_popup'] !== 'false' ? true : false;
-		
+
 		if (el && (!this.curr_popup || allow_on_popup || key == 'return')) {
 			//el.setAttribute('data-type', 'button');
 			var btn = new TVButton(el, this._footer_btns);
@@ -372,13 +372,13 @@ TV.prototype.isSupportVolumeActions = function() {
 	//samsung
 	var el = TV.el('pluginAudio');
 	if (el && el.SetVolumeWithKey) return true;
-	
+
 	//tizen
 	if (TV.platform.isTizen) return true;
 
 	//webos
 	if (typeof (webOS) != "undefined" && webOS.service)	return true;
-	
+
 	return false;
 };
 

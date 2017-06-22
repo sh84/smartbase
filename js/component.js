@@ -23,7 +23,7 @@ TVComponent.prototype.init = function(start_btn_id) {
 	// если для компонента есть data-provider - связываем c this._data_fn
 	if (this.attributes.provider) {
 		var fn = eval(this.attributes.provider);
-		if (typeof fn == 'undefined') 
+		if (typeof fn == 'undefined')
 			throw new Error('Non existent data-provider for component '+this.id);
 		if (typeof fn == 'function') {
 			// вычленяем часть до последней точки - считаем её за this при вызове
@@ -45,26 +45,26 @@ TVComponent.prototype.prerender = function() {
 };
 
 TVComponent.prototype.isHover = function() {
-	return this.adjacent_buttons._hover_btn == this || 
+	return this.adjacent_buttons._hover_btn == this ||
 		!this.parent && Object.keys(this.adjacent_buttons).length == 1;
 };
 
 TVComponent.prototype.render = function(start_btn_id) {
 	if (this._data_fn) this.data = this._data_fn();
-	
+
 	// если для компонента есть шаблон - рендерим
 	var cl;
-	if (this.class_name && TV.app.ejs['component#'+this.class_name]) 
+	if (this.class_name && TV.app.ejs['component#'+this.class_name])
 		cl = 'component#'+this.class_name;
-	if (this.template && TV.app.ejs['component#'+this.template]) 
+	if (this.template && TV.app.ejs['component#'+this.template])
 		cl = 'component#'+this.template;
-	if (this.attributes.template && TV.app.ejs['component#'+this.attributes.template]) 
+	if (this.attributes.template && TV.app.ejs['component#'+this.attributes.template])
 		cl = 'component#'+this.attributes.template;
 	if (cl) {
 		this.prerender();
 		TV.render(this.el, cl, this);
 	}
-	
+
 	this.clearAll();
 	TVButton.initButtonsAndComponents(this, start_btn_id);
 
@@ -89,7 +89,7 @@ TVComponent.prototype.onButtonHover = function(btn) {
 
 TVComponent.prototype.onmouseover = function(event) {
 	TVButton.prototype.onmouseover.call(this, event);
-	if (!event && this.buttons._start_btn && !this.buttons._hover_btn) 
+	if (!event && this.buttons._start_btn && !this.buttons._hover_btn)
 		this.buttons._start_btn.onmouseover(event);
 };
 
@@ -121,8 +121,8 @@ TVComponent.prototype.oncursor = function(side) {
 
 TVComponent.prototype.onenter = function() {
 	if (this.buttons._hover_btn) {
-		this.buttons._hover_btn.onenter ? 
-			this.buttons._hover_btn.onenter() : 
+		this.buttons._hover_btn.onenter ?
+			this.buttons._hover_btn.onenter() :
 			this.buttons._hover_btn.onmouseclick();
 	}
 };
