@@ -2,7 +2,7 @@ function TVPopup(app, name) {
 	var ejs_fn = app.ejs.popup[name];
 	if (!ejs_fn) throw 'Not defined popup '+name+' template';
 	app.popups[name] = this;
-	
+
 	this.app = app;
 	this.el = null;
 	this.buttons = {};          // хеш кнопок страницы

@@ -133,7 +133,7 @@ TVComponents.Scroller.prototype.setScrollbar = function() {
 		TV.log(this.count);
 		var pos = (100 - size) * this.count / parseInt((content_size - frame_size + this.step) / this.step) ;
 		if (pos > 100 - size) pos = 100 - size;
-		
+
 		var scrollbar = TV.el('[data-type="slider-scrollbar"]', this.el);
 		if (this.is_vertical) {
 			scrollbar.style.height = size.toFixed(2)+'%';
@@ -141,7 +141,7 @@ TVComponents.Scroller.prototype.setScrollbar = function() {
 		} else {
 			scrollbar.style.width = size.toFixed(2)+'%';
 			scrollbar.style.left = pos.toFixed(2)+'%';
-		}	
+		}
 	}
 
 };

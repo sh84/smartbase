@@ -145,7 +145,7 @@ if (TV.platform.isTizen) {
 		TV.keys.ch_next = 70;
 		TV.keys.ch_prev = 71;
 	}
-	TV.keys.vol_up = -1; 		// webOS и NetCast не дают работать с 
+	TV.keys.vol_up = -1; 		// webOS и NetCast не дают работать с
 	TV.keys.vol_down = -1;	// кнопками громкости
 	TV.keys.vol_mute = -1;
 } else if (TV.platform.isPhilips) {

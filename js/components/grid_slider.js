@@ -25,7 +25,7 @@ TVComponents.GridSlider.prototype.onready = function() {
 TVComponents.GridSlider.prototype._movie = function(is_first) {
 	if (is_first && this.start_position <= 0) return;
 	if (!is_first && this.start_position + this.count >= this.data.length) return;
-	
+
 	var max = 0;
 	for (var i=0; i < (this.is_vertical ? this.box_x : this.box_y); i++) {
 		var el = is_first ? this.buttons[this.first_btn_id].el.previousElementSibling : this.buttons[this.last_btn_id].el.nextElementSibling;
@@ -44,7 +44,7 @@ TVComponents.GridSlider.prototype._movie = function(is_first) {
 		}
 	}
 	if (this.is_vertical) {
-		this.start_position += is_first ? -this.box_x : this.box_x;	
+		this.start_position += is_first ? -this.box_x : this.box_x;
 	} else {
 		this.start_position += is_first ? -this.box_y : this.box_y;
 	}

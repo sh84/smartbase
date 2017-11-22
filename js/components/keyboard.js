@@ -1,5 +1,5 @@
 TVComponents.Keyboard = function(el, adjacent_buttons, parent, class_name) {
-	TVComponent.call(this, el, adjacent_buttons, parent, class_name);	
+	TVComponent.call(this, el, adjacent_buttons, parent, class_name);
 	this.lang = 'rus';
 	this.keys_arr = {};
 	this.keys_arr['rus']={
@@ -29,7 +29,7 @@ TVComponents.Keyboard.prototype.onButtonClick = function(btn) {
 		} else if (btn.id == 'del') {
 			this.onclick('/d');
 		} else {
-			this.onclick(btn.el.innerHTML);	
+			this.onclick(btn.el.innerHTML);
 		}
-	}	
+	}
 };

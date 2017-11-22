@@ -10,7 +10,7 @@ TVComponents.DigitsKeyboard.prototype.onButtonClick = function(btn) {
 		if (btn.id == 'del') {
 			this.onclick('/d');
 		} else {
-			this.onclick(btn.el.innerHTML);	
+			this.onclick(btn.el.innerHTML);
 		}
-	}	
+	}
 };
