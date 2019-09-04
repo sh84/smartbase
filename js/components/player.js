@@ -73,6 +73,7 @@ TVComponents.Player.prototype.onready = function() {
 	this.video.onprogress = this.onvideoprogress.bind(this);
 	this.video.onbuffering = this.onvideobuffering.bind(this);
 	this.video.onerror = this.onvideoerror.bind(this);
+	this.video.onevent = this.onvideoevent.bind(this);
 
 	// TODO переделать: act_btn, равный close остается с предыдущей страницы с плеером
 	this.buttons._act_btn = null;
