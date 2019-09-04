@@ -4,6 +4,7 @@ TV.PlayerWrapper = function(el) {
 	this.onprogress = null;   // прогресс проигрывания, time в мс
 	this.onbuffering = null;  // начало, окончание и прогресс буферизации
 	this.onerror = null;      // ошибка воспроизведения
+	this.onevent = null;      // события плеера
 	this.video_window_w = null; // размер видео-окна. используется для Samsung
 	this.video_window_h = null;
 	this._tizen_stream_completed = false; // флаг для tizen native-эвента и вызова onend
@@ -87,6 +88,7 @@ TV.PlayerWrapper.prototype.attachCallbacks = function() {
 			}.bind(this),
 			onevent: function(eventType, eventData) {
 				TV.log("Tizen event type: " + eventType + ", data: " + eventData);
+				this.onevent && this.onevent(eventType, eventData);
 			}.bind(this),
 			onstreamcompleted: function() {
 				TV.log("Tizen stream completed");
