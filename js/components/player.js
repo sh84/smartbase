@@ -355,7 +355,6 @@ TVComponents.Player.prototype.play = function() {
 	TV.removeClass(this.buttons.play.el, TVComponents.Player.btn_play_class);
 	TV.addClass(this.buttons.play.el, TVComponents.Player.btn_pause_class);
 	if (this.state == 'stop') {
-		this.stateChange('play');
 		this.data = this._data_fn();
 		this.video.url = this.data.url;
 		this.curr_time = this.data.base_time || 0;
@@ -367,6 +366,7 @@ TVComponents.Player.prototype.play = function() {
 		// запускаем
 		this.buffering = true;
 		this.video.play();
+		this.stateChange('play');
 	} else if (this.state == 'pause') {
 		this.stateChange('play');
 		this.video.resume();
